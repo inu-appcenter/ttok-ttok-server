@@ -245,7 +245,9 @@ public class LaboratoryExcelImportService {
             }
 
             ResearchAreaCategory category = researchAreaCategoryRepository.findByCategoryName(row.categoryName())
-                    .orElseThrow(() -> new MyException(ErrorCode.RESEARCH_AREA_CATEGORY_NOT_FOUND));
+                    .orElseGet(() -> researchAreaCategoryRepository.save(
+                            ResearchAreaCategory.create(row.categoryName())
+                    ));
 
             ResearchArea area = researchKeywordRepository.findByArea(row.areaName())
                     .orElseThrow(() -> new MyException(ErrorCode.RESEARCH_KEYWORD_NOT_FOUND));
