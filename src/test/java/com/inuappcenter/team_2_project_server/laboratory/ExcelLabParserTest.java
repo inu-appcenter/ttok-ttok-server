@@ -42,6 +42,7 @@ class ExcelLabParserTest {
         assertThat(row.labUrl()).isEqualTo("https://lab.example.com");
         assertThat(row.capacity().graduateStudentCount()).isEqualTo(6);
         assertThat(row.capacity().undergraduateStudentCount()).isEqualTo(7);
+        assertThat(row.introduction()).isEqualTo("인공지능을 연구합니다.");
     }
 
     @Test
@@ -78,6 +79,7 @@ class ExcelLabParserTest {
         createLaboratorySheet(workbook);
         createProfessorSheet(workbook);
         createPublicationSheet(workbook);
+        createResearchAreaCategorySheet(workbook);
         return workbook;
     }
 
@@ -93,6 +95,7 @@ class ExcelLabParserTest {
         header.createCell(6).setCellValue("연구실 위치");
         header.createCell(7).setCellValue("개별 연구실 URL");
         header.createCell(8).setCellValue("인원수");
+        header.createCell(9).setCellValue("연구실 요약");
 
         Row row = sheet.createRow(1);
         row.createCell(0).setCellValue("1");
@@ -104,6 +107,26 @@ class ExcelLabParserTest {
         row.createCell(6).setCellValue("7호관 401호");
         row.createCell(7).setCellValue("https://lab.example.com");
         row.createCell(8).setCellValue("석박사: 6명, 학부: 7명");
+        row.createCell(9).setCellValue("인공지능을 연구합니다.");
+    }
+
+    private void createResearchAreaCategorySheet(Workbook workbook) {
+        Sheet sheet = workbook.createSheet("연구카테고리");
+        Row header = sheet.createRow(0);
+        header.createCell(0).setCellValue("카테고리");
+        header.createCell(1).setCellValue("연구분야 ID");
+        header.createCell(2).setCellValue("연구분야명");
+        header.createCell(3).setCellValue("연구실 ID");
+        header.createCell(4).setCellValue("연구실명");
+        header.createCell(5).setCellValue("지도교수");
+
+        Row row = sheet.createRow(1);
+        row.createCell(0).setCellValue("AI");
+        row.createCell(1).setCellValue("1");
+        row.createCell(2).setCellValue("인공지능");
+        row.createCell(3).setCellValue("1");
+        row.createCell(4).setCellValue("AI연구실");
+        row.createCell(5).setCellValue("홍길동");
     }
 
     private void createProfessorSheet(Workbook workbook) {
