@@ -6,6 +6,7 @@ import com.inuappcenter.team_2_project_server.domain.laboratory.dto.LaboratoryCa
 import com.inuappcenter.team_2_project_server.domain.laboratory.dto.parse.LaboratoryExcelRow;
 import com.inuappcenter.team_2_project_server.domain.laboratory.dto.parse.ProfessorExcelRow;
 import com.inuappcenter.team_2_project_server.domain.laboratory.dto.parse.PublicationExcelRow;
+import com.inuappcenter.team_2_project_server.domain.laboratory.dto.parse.ResearchAreaCategoryExcelRow;
 import com.inuappcenter.team_2_project_server.global.error.ex.ErrorCode;
 import com.inuappcenter.team_2_project_server.global.error.ex.MyException;
 import org.apache.poi.ss.usermodel.*;
@@ -26,7 +27,7 @@ import java.util.regex.Pattern;
 public class ExcelLabParser {
 
     /**
-     * 실제 엑셀 파일 연구실쪽 파싱 로직
+     * 실제 엑셀 파일 연구실쪽 파싱 로직(시트 1번)
      */
     public List<LaboratoryExcelRow> parseLaboratories(MultipartFile file) {
         try (Workbook workbook = WorkbookFactory.create(file.getInputStream())) {
@@ -45,7 +46,7 @@ public class ExcelLabParser {
             for (int rowIndex = 1; rowIndex <= sheet.getLastRowNum(); rowIndex++) {
                 Row row = sheet.getRow(rowIndex);
 
-                if (row == null || isBlankRow(row, formatter, 9)) {
+                if (row == null || isBlankRow(row, formatter, 10)) {
                     continue;
                 }
 
@@ -75,12 +76,13 @@ public class ExcelLabParser {
                 getString(row, 5, formatter), // 교수 이메일
                 getString(row, 6, formatter), // 연구실 위치
                 getString(row, 7, formatter), // 개별 연구실 URL
-                parseCapacity(capacityRaw)  // 인원수
+                parseCapacity(capacityRaw),  // 인원수
+                getString(row, 9, formatter)
         );
     }
 
     /**
-     * 실제 엑셀 파일 교수쪽 파싱 로직
+     * 실제 엑셀 파일 교수쪽 파싱 로직(시트 2번)
      */
     public List<ProfessorExcelRow> parseProfessors(MultipartFile file) {
         try (Workbook workbook = WorkbookFactory.create(file.getInputStream())) {
@@ -99,7 +101,7 @@ public class ExcelLabParser {
             for (int rowIndex = 1; rowIndex <= sheet.getLastRowNum(); rowIndex++) {
                 Row row = sheet.getRow(rowIndex);
 
-                if (row == null || isBlankRow(row, formatter, 8)) {
+                if (row == null || isBlankRow(row, formatter, 9)) {
                     continue;
                 }
 
@@ -132,6 +134,9 @@ public class ExcelLabParser {
         );
     }
 
+    /**
+     * 실제 엑셀 파일 논문쪽 파싱 로직(시트 3번)
+     */
     public List<PublicationExcelRow> parsePublications(MultipartFile file) {
         try (Workbook workbook = WorkbookFactory.create(file.getInputStream())) {
             validateWorkbook(workbook);
@@ -183,6 +188,48 @@ public class ExcelLabParser {
         );
     }
 
+    /**
+     * 실제 엑셀 파일 연구분야쪽 파싱 로직(시트 4번)
+     */
+    public List<ResearchAreaCategoryExcelRow> parseResearchAreaCategories(MultipartFile file) {
+        try (Workbook workbook = WorkbookFactory.create(file.getInputStream())) {
+            validateWorkbook(workbook);
+
+            // 엑셀 파일의 첫 번째 시트를 가져옴
+            Sheet sheet = workbook.getSheetAt(3);
+
+            // DataFormatter로 한글
+            DataFormatter formatter = new DataFormatter(Locale.KOREA);
+
+            // 엑셀에서 가져온 행을 저장할 객체
+            List<ResearchAreaCategoryExcelRow> rows = new ArrayList<>();
+
+            // 첫 번째 열부터 파싱(0번째 열은 번호)
+            for (int rowIndex = 1; rowIndex <= sheet.getLastRowNum(); rowIndex++) {
+                Row row = sheet.getRow(rowIndex);
+
+                if (row == null || isBlankRow(row, formatter, 6)) {
+                    continue;
+                }
+
+                rows.add(toResearchAreaCategoryExcelRow(row, formatter));
+            }
+            return rows;
+        } catch (MyException e) {
+            throw e;
+        } catch (IOException | RuntimeException e) {
+            throw new MyException(ErrorCode.INVALID_EXCEL_FILE);
+        }
+    }
+
+    private ResearchAreaCategoryExcelRow toResearchAreaCategoryExcelRow(Row row, DataFormatter formatter) {
+        return new ResearchAreaCategoryExcelRow(
+                getString(row, 0, formatter),
+                getString(row, 2, formatter)
+        );
+    }
+
+
     // 학과가 해당 단과대에 있는 지 확인
     private void validateCollegeAndDepartment(College college, Department department) {
         if (department.getCollegeName() != college) {
@@ -217,20 +264,21 @@ public class ExcelLabParser {
 
     // 엑셀 파일 헤더 검증 메서드
     private void validateWorkbook(Workbook workbook) {
-        if (workbook.getNumberOfSheets() < 3) {
+        if (workbook.getNumberOfSheets() < 4) {
             throw new MyException(ErrorCode.INVALID_EXCEL_SHEET);
         }
 
         validateSheetName(workbook.getSheetAt(0), "연구실");
         validateSheetName(workbook.getSheetAt(1), "교수정보");
         validateSheetName(workbook.getSheetAt(2), "연구실논문");
+        validateSheetName(workbook.getSheetAt(3), "연구카테고리");
 
         DataFormatter formatter = new DataFormatter(Locale.KOREA);
 
         validateHeader(
                 workbook.getSheetAt(0),
                 formatter,
-                List.of("번호", "단과대", "학과/전공", "연구실명", "지도교수", "교수 이메일", "연구실 위치", "개별 연구실 URL", "인원수")
+                List.of("번호", "단과대", "학과/전공", "연구실명", "지도교수", "교수 이메일", "연구실 위치", "개별 연구실 URL", "인원수", "연구실 요약")
         );
 
         validateHeader(
@@ -243,6 +291,12 @@ public class ExcelLabParser {
                 workbook.getSheetAt(2),
                 formatter,
                 List.of("번호", "연구실번호", "학과/전공", "연구실명", "지도교수", "논문명", "저자", "게재처", "연도", "논문유형", "상태", "DOI", "논문URL", "출처유형")
+        );
+
+        validateHeader(
+                workbook.getSheetAt(3),
+                formatter,
+                List.of("카테고리", "연구분야 ID", "연구분야명", "연구실 ID", "연구실명", "지도교수")
         );
     }
 

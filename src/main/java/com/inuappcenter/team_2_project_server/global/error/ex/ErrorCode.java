@@ -43,7 +43,7 @@ public enum ErrorCode {
     LAB_REVIEW_NOT_FOUND(HttpStatus.NOT_FOUND, "LAB_REVIEW_NOT_FOUND", "존재하지 않는 연구실 리뷰입니다."),
     ONBOARDING_ALREADY_DONE(HttpStatus.BAD_REQUEST, "ONBOARDING_ALREADY_DONE", "이미 온보딩을 완료했습니다."),
     BUG_REPORT_NOT_FOUND(HttpStatus.NOT_FOUND, "BUG_REPORT_NOT_FOUND", "오류 제보가 존재하지 않습니다."),
-    ;
+    RESEARCH_AREA_CATEGORY_NOT_FOUND(HttpStatus.NOT_FOUND, "RESEARCH_AREA_CATEGORY_NOT_FOUND", "해당 카테고리가 존재하지 않습니다.");
 
     private final HttpStatus status;
     private final String code;

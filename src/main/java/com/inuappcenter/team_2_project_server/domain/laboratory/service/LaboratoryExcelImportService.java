@@ -4,13 +4,16 @@ import com.inuappcenter.team_2_project_server.domain.department.Department;
 import com.inuappcenter.team_2_project_server.domain.laboratory.dto.parse.LaboratoryExcelRow;
 import com.inuappcenter.team_2_project_server.domain.laboratory.dto.parse.ProfessorExcelRow;
 import com.inuappcenter.team_2_project_server.domain.laboratory.dto.parse.PublicationExcelRow;
+import com.inuappcenter.team_2_project_server.domain.laboratory.dto.parse.ResearchAreaCategoryExcelRow;
 import com.inuappcenter.team_2_project_server.domain.laboratory.entity.Laboratory;
 import com.inuappcenter.team_2_project_server.domain.laboratory.entity.LaboratoryResearchArea;
 import com.inuappcenter.team_2_project_server.domain.laboratory.entity.Publication;
 import com.inuappcenter.team_2_project_server.domain.laboratory.entity.ResearchArea;
+import com.inuappcenter.team_2_project_server.domain.laboratory.entity.ResearchAreaCategory;
 import com.inuappcenter.team_2_project_server.domain.laboratory.repository.LaboratoryRepository;
 import com.inuappcenter.team_2_project_server.domain.laboratory.repository.LaboratoryResearchKeywordRepository;
 import com.inuappcenter.team_2_project_server.domain.laboratory.repository.PublicationRepository;
+import com.inuappcenter.team_2_project_server.domain.laboratory.repository.ResearchAreaCategoryRepository;
 import com.inuappcenter.team_2_project_server.domain.laboratory.repository.ResearchKeywordRepository;
 import com.inuappcenter.team_2_project_server.domain.member.entity.Professor;
 import com.inuappcenter.team_2_project_server.domain.member.repository.ProfessorRepository;
@@ -40,6 +43,7 @@ public class LaboratoryExcelImportService {
     private final ResearchKeywordRepository researchKeywordRepository;
     private final LaboratoryResearchKeywordRepository laboratoryResearchKeywordRepository;
     private final PublicationRepository publicationRepository;
+    private final ResearchAreaCategoryRepository researchAreaCategoryRepository;
 
     public void importExcel(MultipartFile file) {
         validateExcelFile(file);
@@ -48,10 +52,13 @@ public class LaboratoryExcelImportService {
         List<ProfessorExcelRow> professorRows = excelLabParser.parseProfessors(file);
         List<LaboratoryExcelRow> laboratoryRows = excelLabParser.parseLaboratories(file);
         List<PublicationExcelRow> publicationExcelRows = excelLabParser.parsePublications(file);
+        List<ResearchAreaCategoryExcelRow> researchAreaCategoryExcelRows = excelLabParser.parseResearchAreaCategories(file);
 
         saveProfessors(professorRows);
         saveLaboratories(laboratoryRows, professorRows);
         savePublications(publicationExcelRows);
+        saveResearchAreaCategory(researchAreaCategoryExcelRows);
+
     }
 
 
@@ -102,7 +109,7 @@ public class LaboratoryExcelImportService {
                     row.location(),
                     row.capacity().graduateStudentCount(),
                     row.capacity().undergraduateStudentCount(),
-                    null,
+                    row.introduction(),
                     professor,
                     row.labUrl(),
                     researchFieldRaw
@@ -225,6 +232,27 @@ public class LaboratoryExcelImportService {
             );
 
             publicationRepository.save(publication);
+        }
+    }
+
+    /**
+     * 연구 분야 카테고리 저장 메서드
+     */
+    private void saveResearchAreaCategory(List<ResearchAreaCategoryExcelRow> rows) {
+        for (ResearchAreaCategoryExcelRow row : rows) {
+            if (row.categoryName() == null || row.areaName() == null) {
+                continue;
+            }
+
+            ResearchAreaCategory category = researchAreaCategoryRepository.findByCategoryName(row.categoryName())
+                    .orElseGet(() -> researchAreaCategoryRepository.save(
+                            ResearchAreaCategory.create(row.categoryName())
+                    ));
+
+            ResearchArea area = researchKeywordRepository.findByArea(row.areaName())
+                    .orElseThrow(() -> new MyException(ErrorCode.RESEARCH_KEYWORD_NOT_FOUND));
+
+            area.updateCategory(category);
         }
     }
 }

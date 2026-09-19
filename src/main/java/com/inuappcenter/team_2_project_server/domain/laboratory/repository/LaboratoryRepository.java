@@ -7,6 +7,8 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
 import java.util.List;
 
@@ -24,6 +26,16 @@ public interface LaboratoryRepository extends JpaRepository<Laboratory, Long> {
             String professorNameKeyword,
             Pageable pageable
     );
+
+    // 카테고리(상위 개념) -> 하위 연구분야 키워드 -> 연구실로 이어지는 조인 검색
+    @EntityGraph(attributePaths = "professor")
+    @Query("""
+            select distinct l from Laboratory l
+            join LaboratoryResearchArea lra on lra.laboratory = l
+            join lra.researchKeyword ra
+            where ra.category.categoryName = :categoryName
+            """)
+    Page<Laboratory> findByResearchAreaCategoryName(@Param("categoryName") String categoryName, Pageable pageable);
 
     @Override
     @EntityGraph(attributePaths = "professor")

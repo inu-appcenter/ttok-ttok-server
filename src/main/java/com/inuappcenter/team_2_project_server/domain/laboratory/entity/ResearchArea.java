@@ -28,6 +28,10 @@ public class ResearchArea extends BaseEntity {
 
     private String area;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "research_area_category_id")
+    private ResearchAreaCategory category;
+
     private ResearchArea(
             String area
     ) {
@@ -38,5 +42,9 @@ public class ResearchArea extends BaseEntity {
             String area
     ) {
         return new ResearchArea(area);
+    }
+
+    public void updateCategory(ResearchAreaCategory category) {
+        this.category = category;
     }
 }

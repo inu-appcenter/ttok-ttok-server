@@ -13,6 +13,7 @@ import com.inuappcenter.team_2_project_server.domain.laboratory.entity.ResearchA
 import com.inuappcenter.team_2_project_server.domain.laboratory.repository.LaboratoryRepository;
 import com.inuappcenter.team_2_project_server.domain.laboratory.repository.LaboratoryResearchKeywordRepository;
 import com.inuappcenter.team_2_project_server.domain.laboratory.repository.PublicationRepository;
+import com.inuappcenter.team_2_project_server.domain.laboratory.repository.ResearchAreaCategoryRepository;
 import com.inuappcenter.team_2_project_server.domain.laboratory.repository.ResearchKeywordRepository;
 import com.inuappcenter.team_2_project_server.domain.laboratory.service.ExcelLabParser;
 import com.inuappcenter.team_2_project_server.domain.laboratory.service.LaboratoryExcelImportService;
@@ -42,6 +43,7 @@ class LaboratoryExcelImportServiceTest {
     private LaboratoryResearchKeywordRepository laboratoryResearchKeywordRepository;
     private LaboratoryExcelImportService laboratoryExcelImportService;
     private PublicationRepository publicationRepository;
+    private ResearchAreaCategoryRepository researchAreaCategoryRepository;
 
     @BeforeEach
     void setUp() {
@@ -51,13 +53,15 @@ class LaboratoryExcelImportServiceTest {
         researchKeywordRepository = mock(ResearchKeywordRepository.class);
         laboratoryResearchKeywordRepository = mock(LaboratoryResearchKeywordRepository.class);
         publicationRepository = mock(PublicationRepository.class);
+        researchAreaCategoryRepository = mock(ResearchAreaCategoryRepository.class);
         laboratoryExcelImportService = new LaboratoryExcelImportService(
                 excelLabParser,
                 professorRepository,
                 laboratoryRepository,
                 researchKeywordRepository,
                 laboratoryResearchKeywordRepository,
-                publicationRepository
+                publicationRepository,
+                researchAreaCategoryRepository
         );
     }
 
@@ -242,7 +246,8 @@ class LaboratoryExcelImportServiceTest {
                 "hong@inu.ac.kr",
                 "7호관 401호",
                 "https://lab.example.com",
-                new LaboratoryCapacityDto(6, 7)
+                new LaboratoryCapacityDto(6, 7),
+                "인공지능을 연구합니다."
         );
     }
 

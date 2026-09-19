@@ -11,6 +11,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springdoc.core.annotations.ParameterObject;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.MediaType;
@@ -101,6 +102,19 @@ public class LaboratoryController implements LaboratoryApiSpecification {
         Page<LaboratoryResponseDto> page = laboratoryService.searchLabs(keyword, pageable);
         return ResponseEntity.ok(
                 ResponseDto.of(PageResponseDto.from(page), "연구실 검색 성공")
+        );
+    }
+
+    @Override
+    @GetMapping("/search/category")
+    public ResponseEntity<ResponseDto<PageResponseDto<LaboratoryResponseDto>>> searchLaboratoryByCategory(
+            @RequestParam String categoryName,
+            @RequestParam(defaultValue = "0") int page
+    ) {
+        Pageable pageable = PageRequest.of(page, 20);
+        Page<LaboratoryResponseDto> result = laboratoryService.searchLabsByCategory(categoryName, pageable);
+        return ResponseEntity.ok(
+                ResponseDto.of(PageResponseDto.from(result), "카테고리별 연구실 검색 성공")
         );
     }
 }
