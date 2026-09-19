@@ -46,9 +46,9 @@ public class Laboratory extends BaseEntity {
     private String labUrl;
 
     // 엑셀 원문을 그대로 저장
-    @Column(name = "research_field_raw")
+    @Column(name = "research_field_raw", columnDefinition = "TEXT")
     private String researchFieldRaw;
-    
+
     private String location;
 
     @Column(name = "graduate_student_count")
@@ -57,6 +57,7 @@ public class Laboratory extends BaseEntity {
     @Column(name = "undergraduate_student_count")
     private Integer undergraduateStudentCount;
 
+    @Column(columnDefinition = "TEXT")
     private String introduction;
 
     private Laboratory(
