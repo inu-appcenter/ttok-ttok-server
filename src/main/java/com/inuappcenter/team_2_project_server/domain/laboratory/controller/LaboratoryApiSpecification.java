@@ -526,7 +526,7 @@ public interface LaboratoryApiSpecification {
             summary = "카테고리별 연구실 검색",
             description = """
                     상위 연구분야 카테고리명으로 검색하면, 그 카테고리에 속한 모든 하위 연구분야의 연구실을 페이지 단위로 조회합니다.
-                    page(0-based), size, sort 쿼리 파라미터를 사용하며 기본값은 size=20 입니다.
+                    page(0-based) 쿼리 파라미터만 사용하며, 한 페이지당 20건으로 고정입니다.
                     """
     )
     @ApiResponses({
@@ -597,13 +597,10 @@ public interface LaboratoryApiSpecification {
                     )
             )
     })
-    @Parameter(name = "page", in = ParameterIn.QUERY, description = "0부터 시작하는 페이지 번호", example = "0")
-    @Parameter(name = "size", in = ParameterIn.QUERY, description = "한 페이지에 담을 개수 (기본값 20)", example = "20")
-    @Parameter(name = "sort", in = ParameterIn.QUERY, description = "정렬 조건. `필드명,asc|desc` 형식 (예: labName,desc)", example = "labName,asc")
     ResponseEntity<ResponseDto<PageResponseDto<LaboratoryResponseDto>>> searchLaboratoryByCategory(
             @Parameter(description = "상위 연구분야 카테고리명", required = true, example = "AI")
             @RequestParam String categoryName,
-            @ParameterObject
-            @PageableDefault(size = 20) Pageable pageable
+            @Parameter(description = "0부터 시작하는 페이지 번호", example = "0")
+            @RequestParam(defaultValue = "0") int page
     );
 }
