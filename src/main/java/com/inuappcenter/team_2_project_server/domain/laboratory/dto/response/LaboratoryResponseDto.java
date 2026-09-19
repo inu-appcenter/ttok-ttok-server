@@ -21,10 +21,15 @@ public record LaboratoryResponseDto(
         String introduction,
         ProfessorResponseDto professor,
         String labUrl,
-        List<String> researchAreas
+        List<String> researchAreas,
+        List<PublicationResponseDto> publications
 ) {
 
     public static LaboratoryResponseDto from(Laboratory laboratory) {
+        return of(laboratory, List.of());
+    }
+
+    public static LaboratoryResponseDto of(Laboratory laboratory, List<PublicationResponseDto> publications) {
         return new LaboratoryResponseDto(
                 laboratory.getId(),
                 laboratory.getCollege(),
@@ -40,7 +45,8 @@ public record LaboratoryResponseDto(
                 laboratory.getIntroduction(),
                 ProfessorResponseDto.from(laboratory.getProfessor()),
                 laboratory.getLabUrl(),
-                parseResearchAreas(laboratory.getResearchFieldRaw())
+                parseResearchAreas(laboratory.getResearchFieldRaw()),
+                publications
         );
     }
 

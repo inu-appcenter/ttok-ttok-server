@@ -4,8 +4,10 @@ import com.inuappcenter.team_2_project_server.domain.laboratory.dto.request.Labo
 import com.inuappcenter.team_2_project_server.domain.laboratory.dto.request.LaboratoryCreateRequestDto;
 import com.inuappcenter.team_2_project_server.domain.laboratory.dto.request.LaboratoryUpdateRequestDto;
 import com.inuappcenter.team_2_project_server.domain.laboratory.dto.response.LaboratoryResponseDto;
+import com.inuappcenter.team_2_project_server.domain.laboratory.dto.response.PublicationResponseDto;
 import com.inuappcenter.team_2_project_server.domain.laboratory.entity.Laboratory;
 import com.inuappcenter.team_2_project_server.domain.laboratory.repository.LaboratoryRepository;
+import com.inuappcenter.team_2_project_server.domain.laboratory.repository.PublicationRepository;
 import com.inuappcenter.team_2_project_server.domain.member.entity.Professor;
 import com.inuappcenter.team_2_project_server.domain.member.repository.ProfessorRepository;
 import com.inuappcenter.team_2_project_server.global.error.ex.ErrorCode;
@@ -27,6 +29,7 @@ import java.util.stream.Collectors;
 public class LaboratoryService {
     private final LaboratoryRepository laboratoryRepository;
     private final ProfessorRepository professorRepository;
+    private final PublicationRepository publicationRepository;
 
     /**
      * 연구실 수동 생성 메서드
@@ -71,7 +74,12 @@ public class LaboratoryService {
         Laboratory laboratory = laboratoryRepository.findById(laboratoryId)
                 .orElseThrow(() -> new MyException(ErrorCode.LABORATORY_NOT_FOUND));
 
-        return LaboratoryResponseDto.from(laboratory);
+        List<PublicationResponseDto> publications = publicationRepository.findAllByLaboratory(laboratory)
+                .stream()
+                .map(PublicationResponseDto::from)
+                .toList();
+
+        return LaboratoryResponseDto.of(laboratory, publications);
     }
 
     /**
