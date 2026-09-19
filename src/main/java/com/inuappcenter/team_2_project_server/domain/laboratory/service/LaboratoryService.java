@@ -74,12 +74,7 @@ public class LaboratoryService {
         Laboratory laboratory = laboratoryRepository.findById(laboratoryId)
                 .orElseThrow(() -> new MyException(ErrorCode.LABORATORY_NOT_FOUND));
 
-        List<PublicationResponseDto> publications = publicationRepository.findAllByLaboratory(laboratory)
-                .stream()
-                .map(PublicationResponseDto::from)
-                .toList();
-
-        return LaboratoryResponseDto.of(laboratory, publications);
+        return LaboratoryResponseDto.from(laboratory);
     }
 
     /**
@@ -163,5 +158,14 @@ public class LaboratoryService {
 
         return laboratoryRepository.findByResearchAreaCategoryName(categoryName.trim(), pageable)
                 .map(LaboratoryResponseDto::from);
+    }
+
+    @Transactional(readOnly = true)
+    public Page<PublicationResponseDto> getLabPublications(Long laboratoryId, Pageable pageable) {
+        Laboratory laboratory = laboratoryRepository.findById(laboratoryId)
+                .orElseThrow(() -> new MyException(ErrorCode.LABORATORY_NOT_FOUND));
+
+        return publicationRepository.findByLaboratory(laboratory, pageable)
+                .map(PublicationResponseDto::from);
     }
 }

@@ -3,6 +3,7 @@ package com.inuappcenter.team_2_project_server.domain.laboratory.controller;
 import com.inuappcenter.team_2_project_server.domain.laboratory.dto.request.LaboratoryCreateRequestDto;
 import com.inuappcenter.team_2_project_server.domain.laboratory.dto.request.LaboratoryUpdateRequestDto;
 import com.inuappcenter.team_2_project_server.domain.laboratory.dto.response.LaboratoryResponseDto;
+import com.inuappcenter.team_2_project_server.domain.laboratory.dto.response.PublicationResponseDto;
 import com.inuappcenter.team_2_project_server.domain.laboratory.service.LaboratoryExcelImportService;
 import com.inuappcenter.team_2_project_server.domain.laboratory.service.LaboratoryService;
 import com.inuappcenter.team_2_project_server.global.dto.PageResponseDto;
@@ -12,14 +13,13 @@ import lombok.RequiredArgsConstructor;
 import org.springdoc.core.annotations.ParameterObject;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
-
-import org.springframework.data.domain.Pageable;
 
 @RestController
 @RequiredArgsConstructor
@@ -115,6 +115,19 @@ public class LaboratoryController implements LaboratoryApiSpecification {
         Page<LaboratoryResponseDto> result = laboratoryService.searchLabsByCategory(categoryName, pageable);
         return ResponseEntity.ok(
                 ResponseDto.of(PageResponseDto.from(result), "카테고리별 연구실 검색 성공")
+        );
+    }
+
+    @Override
+    @GetMapping("/{laboratoryId}/publications")
+    public ResponseEntity<ResponseDto<PageResponseDto<PublicationResponseDto>>> getPublications(
+            @PathVariable Long laboratoryId,
+            @RequestParam(defaultValue = "0") int page
+    ) {
+        Pageable pageable = PageRequest.of(page, 5, Sort.by(Sort.Direction.DESC, "year"));
+        Page<PublicationResponseDto> result = laboratoryService.getLabPublications(laboratoryId, pageable);
+        return ResponseEntity.ok(
+                ResponseDto.of(PageResponseDto.from(result), "연구실 논문 목록 조회 성공")
         );
     }
 }
