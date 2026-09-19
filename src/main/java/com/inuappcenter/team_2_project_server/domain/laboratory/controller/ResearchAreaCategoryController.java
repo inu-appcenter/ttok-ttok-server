@@ -6,8 +6,8 @@ import com.inuappcenter.team_2_project_server.global.dto.ResponseDto;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
@@ -15,9 +15,10 @@ import java.util.List;
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/research-area-category")
-public class ResearchAreaCategoryController {
+public class ResearchAreaCategoryController implements ResearchAreaCategoryApiSpecification {
     private final ResearchAreaCategoryService researchAreaCategoryService;
 
+    @Override
     @GetMapping
     public ResponseEntity<ResponseDto<List<ResearchAreaCategoryResponseDto>>> getAllResearchAreaCategories() {
         List<ResearchAreaCategoryResponseDto> responses = researchAreaCategoryService.getAllResearchAreaCategory();
@@ -27,9 +28,10 @@ public class ResearchAreaCategoryController {
         );
     }
 
-    @GetMapping()
+    @Override
+    @GetMapping("/{categoryName}")
     public ResponseEntity<ResponseDto<ResearchAreaCategoryResponseDto>> getResearchAreaCategory(
-            @RequestParam String categoryName
+            @PathVariable String categoryName
     ) {
         ResearchAreaCategoryResponseDto response = researchAreaCategoryService.getResearchAreaCategory(categoryName);
 

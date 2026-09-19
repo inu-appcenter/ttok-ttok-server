@@ -104,6 +104,7 @@ public class LaboratoryController implements LaboratoryApiSpecification {
         );
     }
 
+    @Override
     @GetMapping("/search/category")
     public ResponseEntity<ResponseDto<PageResponseDto<LaboratoryResponseDto>>> searchLaboratoryByCategory(
             @RequestParam String categoryName,
