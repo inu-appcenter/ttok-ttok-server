@@ -12,6 +12,7 @@ public record LaboratoryExcelRow(
         String professorEmail,
         String location,
         String labUrl,
-        LaboratoryCapacityDto capacity
+        LaboratoryCapacityDto capacity,
+        String introduction
 ) {
 }

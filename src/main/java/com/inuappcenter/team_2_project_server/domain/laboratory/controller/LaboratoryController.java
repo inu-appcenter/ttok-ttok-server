@@ -103,4 +103,15 @@ public class LaboratoryController implements LaboratoryApiSpecification {
                 ResponseDto.of(PageResponseDto.from(page), "연구실 검색 성공")
         );
     }
+
+    @GetMapping("/search/category")
+    public ResponseEntity<ResponseDto<PageResponseDto<LaboratoryResponseDto>>> searchLaboratoryByCategory(
+            @RequestParam String categoryName,
+            @ParameterObject @PageableDefault(size = 20) Pageable pageable
+    ) {
+        Page<LaboratoryResponseDto> page = laboratoryService.searchLabsByCategory(categoryName, pageable);
+        return ResponseEntity.ok(
+                ResponseDto.of(PageResponseDto.from(page), "카테고리별 연구실 검색 성공")
+        );
+    }
 }

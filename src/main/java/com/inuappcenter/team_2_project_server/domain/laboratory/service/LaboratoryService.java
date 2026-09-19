@@ -13,10 +13,10 @@ import com.inuappcenter.team_2_project_server.global.error.ex.MyException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import org.springframework.data.domain.Pageable;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -143,6 +143,17 @@ public class LaboratoryService {
         String trimmedKeyword = keyword.trim();
 
         return laboratoryRepository.findByLabNameContainingIgnoreCaseOrProfessor_NameContainingIgnoreCase(trimmedKeyword, trimmedKeyword, pageable)
+                .map(LaboratoryResponseDto::from);
+    }
+
+    // 카테고리(상위 개념)로 검색하면 하위 연구분야에 속한 연구실이 전부 조회됨
+    @Transactional(readOnly = true)
+    public Page<LaboratoryResponseDto> searchLabsByCategory(String categoryName, Pageable pageable) {
+        if (categoryName == null || categoryName.isBlank()) {
+            throw new MyException(ErrorCode.INVALID_SEARCH_KEYWORD);
+        }
+
+        return laboratoryRepository.findByResearchAreaCategoryName(categoryName.trim(), pageable)
                 .map(LaboratoryResponseDto::from);
     }
 }
