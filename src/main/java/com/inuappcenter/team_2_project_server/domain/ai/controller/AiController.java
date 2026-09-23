@@ -15,10 +15,21 @@ public class AiController implements AiApiSpecification {
 
     private final AiService aiService;
 
-    @Override
-    @PostMapping
-    public ChatResult chat(@RequestBody ChatRequest request) {
-        AiResponseDto response = aiService.ask(request.message());
+    @PostMapping("/research-lab")
+    public ChatResult researchLabChat(@RequestBody ChatRequest request) {
+        AiResponseDto response = aiService.researchLabAsk(request.message());
+
+        String answer = response.choices()
+                .get(0)
+                .message()
+                .content();
+
+        return new ChatResult(answer, response.credits());
+    }
+
+    @PostMapping("/email-editor")
+    public ChatResult emailEditorChat(@RequestBody ChatRequest request) {
+        AiResponseDto response = aiService.emailEditorAsk(request.message());
 
         String answer = response.choices()
                 .get(0)
