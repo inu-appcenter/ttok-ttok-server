@@ -20,4 +20,5 @@ jwt:
 ai:
   base-url: http://localhost
   api-key: test-ai-api-key
-  chatbot-id: "0"
+  research-lab-chatbot-id: "0"
+  email-editor-chatbot-id: "0"

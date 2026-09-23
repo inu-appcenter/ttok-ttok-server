@@ -1,6 +1,7 @@
 .idea/*
 .idea/
 *.xml
+*.iml
 *.toml
 .DS_Store
 .gradle/
@@ -16,6 +17,7 @@ application*.yml
 .env
 .env.*
 *.env
+.venv/
 
 # Logs
 logs/
