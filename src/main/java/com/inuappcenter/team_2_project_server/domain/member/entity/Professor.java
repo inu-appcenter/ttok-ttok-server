@@ -43,6 +43,10 @@ public class Professor extends BaseEntity {
 
     String email;
 
+    @OneToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "member_id", unique = true)
+    Member member;
+
     private Professor(
             String name,
             String positionRaw,
