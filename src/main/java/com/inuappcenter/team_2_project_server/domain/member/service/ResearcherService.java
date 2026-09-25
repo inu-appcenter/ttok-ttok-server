@@ -50,4 +50,13 @@ public class ResearcherService {
                 .map(ResearcherResponseDto::from)
                 .orElseThrow(() -> new MyException(ErrorCode.RESEARCHER_NOT_FOUND));
     }
+
+    /**
+     * 연구실 소속 검증
+     */
+    public void validateAffiliation(Member member, Long laboratoryId) {
+        if (!researcherRepository.existsByMemberIdAndLaboratoryId(member.getId(), laboratoryId)) {
+            throw new MyException(ErrorCode.INVALID_LAB_ACCESS);
+        }
+    }
 }

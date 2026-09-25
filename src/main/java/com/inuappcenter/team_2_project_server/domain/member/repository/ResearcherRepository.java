@@ -9,4 +9,6 @@ public interface ResearcherRepository extends JpaRepository<Researcher, Long> {
     Optional<Researcher> findByMemberId(Long memberId);
 
     boolean existsByMemberId(Long memberId);
+
+    boolean existsByMemberIdAndLaboratoryId(Long memberId, Long laboratoryId);
 }

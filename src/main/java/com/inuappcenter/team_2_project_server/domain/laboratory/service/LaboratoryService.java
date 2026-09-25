@@ -8,8 +8,10 @@ import com.inuappcenter.team_2_project_server.domain.laboratory.dto.response.Pub
 import com.inuappcenter.team_2_project_server.domain.laboratory.entity.Laboratory;
 import com.inuappcenter.team_2_project_server.domain.laboratory.repository.LaboratoryRepository;
 import com.inuappcenter.team_2_project_server.domain.laboratory.repository.PublicationRepository;
+import com.inuappcenter.team_2_project_server.domain.member.entity.Member;
 import com.inuappcenter.team_2_project_server.domain.member.entity.Professor;
 import com.inuappcenter.team_2_project_server.domain.member.repository.ProfessorRepository;
+import com.inuappcenter.team_2_project_server.domain.member.service.ResearcherService;
 import com.inuappcenter.team_2_project_server.global.error.ex.ErrorCode;
 import com.inuappcenter.team_2_project_server.global.error.ex.MyException;
 import lombok.RequiredArgsConstructor;
@@ -30,6 +32,7 @@ public class LaboratoryService {
     private final LaboratoryRepository laboratoryRepository;
     private final ProfessorRepository professorRepository;
     private final PublicationRepository publicationRepository;
+    private final ResearcherService researcherService;
 
     /**
      * 연구실 수동 생성 메서드
@@ -91,10 +94,13 @@ public class LaboratoryService {
      */
     public LaboratoryResponseDto updateLab(
             Long laboratoryId,
-            LaboratoryUpdateRequestDto request
+            LaboratoryUpdateRequestDto request,
+            Member member
     ) {
         Laboratory laboratory = laboratoryRepository.findById(laboratoryId)
                 .orElseThrow(() -> new MyException(ErrorCode.LABORATORY_NOT_FOUND));
+
+        researcherService.validateAffiliation(member, laboratoryId);
 
         LaboratoryCapacityUpdateRequestDto capacity = request.capacity();
 
@@ -116,10 +122,13 @@ public class LaboratoryService {
      * 연구실 삭제 메서드
      */
     public void deleteLab(
+            Member member,
             Long laboratoryId
     ) {
         Laboratory laboratory = laboratoryRepository.findById(laboratoryId)
                 .orElseThrow(() -> new MyException(ErrorCode.LABORATORY_NOT_FOUND));
+
+        researcherService.validateAffiliation(member, laboratoryId);
 
         laboratoryRepository.delete(laboratory);
     }

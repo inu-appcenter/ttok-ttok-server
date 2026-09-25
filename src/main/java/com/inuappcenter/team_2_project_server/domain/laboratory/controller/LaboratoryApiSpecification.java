@@ -4,6 +4,7 @@ import com.inuappcenter.team_2_project_server.domain.laboratory.dto.request.Labo
 import com.inuappcenter.team_2_project_server.domain.laboratory.dto.request.LaboratoryUpdateRequestDto;
 import com.inuappcenter.team_2_project_server.domain.laboratory.dto.response.LaboratoryResponseDto;
 import com.inuappcenter.team_2_project_server.domain.laboratory.dto.response.PublicationResponseDto;
+import com.inuappcenter.team_2_project_server.domain.member.entity.Member;
 import com.inuappcenter.team_2_project_server.global.dto.PageResponseDto;
 import com.inuappcenter.team_2_project_server.global.dto.ResponseDto;
 import io.swagger.v3.oas.annotations.Operation;
@@ -21,6 +22,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -313,6 +315,7 @@ public interface LaboratoryApiSpecification {
             description = """
                     연구실 ID로 연구실 정보를 수정합니다.
                     요청에 포함된 값만 수정하며, 연구분야는 쉼표 문자열이 아니라 배열로 전달합니다.
+                    인증된 사용자가 해당 연구실 소속(연구자)인 경우에만 수정할 수 있습니다.
                     """
     )
     @io.swagger.v3.oas.annotations.parameters.RequestBody(
@@ -381,6 +384,21 @@ public interface LaboratoryApiSpecification {
                     )
             ),
             @ApiResponse(
+                    responseCode = "403",
+                    description = "해당 연구실 소속이 아님",
+                    content = @Content(
+                            mediaType = "application/json",
+                            schema = @Schema(implementation = ResponseDto.class),
+                            examples = @ExampleObject(value = """
+                                    {
+                                      "data": null,
+                                      "code": "INVALID_LAB_ACCESS",
+                                      "message": "해당 연구실에 접근 권한이 없습니다."
+                                    }
+                                    """)
+                    )
+            ),
+            @ApiResponse(
                     responseCode = "404",
                     description = "존재하지 않는 연구실",
                     content = @Content(
@@ -397,11 +415,18 @@ public interface LaboratoryApiSpecification {
             )
     })
     ResponseEntity<ResponseDto<LaboratoryResponseDto>> updateLaboratory(
+            @AuthenticationPrincipal Member member,
             @PathVariable Long laboratoryId,
             @RequestBody LaboratoryUpdateRequestDto request
     );
 
-    @Operation(summary = "연구실 삭제", description = "연구실 ID로 연구실을 삭제합니다.")
+    @Operation(
+            summary = "연구실 삭제",
+            description = """
+                    연구실 ID로 연구실을 삭제합니다.
+                    인증된 사용자가 해당 연구실 소속(연구자)인 경우에만 삭제할 수 있습니다.
+                    """
+    )
     @ApiResponses({
             @ApiResponse(
                     responseCode = "200",
@@ -414,6 +439,21 @@ public interface LaboratoryApiSpecification {
                                       "data": 1,
                                       "code": null,
                                       "message": "연구실 삭제 완료"
+                                    }
+                                    """)
+                    )
+            ),
+            @ApiResponse(
+                    responseCode = "403",
+                    description = "해당 연구실 소속이 아님",
+                    content = @Content(
+                            mediaType = "application/json",
+                            schema = @Schema(implementation = ResponseDto.class),
+                            examples = @ExampleObject(value = """
+                                    {
+                                      "data": null,
+                                      "code": "INVALID_LAB_ACCESS",
+                                      "message": "해당 연구실에 접근 권한이 없습니다."
                                     }
                                     """)
                     )
@@ -435,6 +475,7 @@ public interface LaboratoryApiSpecification {
             )
     })
     ResponseEntity<ResponseDto<Long>> deleteLaboratory(
+            @AuthenticationPrincipal Member member,
             @PathVariable Long laboratoryId
     );
 

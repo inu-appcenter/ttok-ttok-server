@@ -6,6 +6,7 @@ import com.inuappcenter.team_2_project_server.domain.laboratory.dto.response.Lab
 import com.inuappcenter.team_2_project_server.domain.laboratory.dto.response.PublicationResponseDto;
 import com.inuappcenter.team_2_project_server.domain.laboratory.service.LaboratoryExcelImportService;
 import com.inuappcenter.team_2_project_server.domain.laboratory.service.LaboratoryService;
+import com.inuappcenter.team_2_project_server.domain.member.entity.Member;
 import com.inuappcenter.team_2_project_server.global.dto.PageResponseDto;
 import com.inuappcenter.team_2_project_server.global.dto.ResponseDto;
 import jakarta.validation.Valid;
@@ -18,6 +19,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -74,10 +76,11 @@ public class LaboratoryController implements LaboratoryApiSpecification {
 
     @PatchMapping("/{laboratoryId}")
     public ResponseEntity<ResponseDto<LaboratoryResponseDto>> updateLaboratory(
+            @AuthenticationPrincipal Member member,
             @PathVariable Long laboratoryId,
             @Valid @RequestBody LaboratoryUpdateRequestDto request
     ) {
-        LaboratoryResponseDto response = laboratoryService.updateLab(laboratoryId, request);
+        LaboratoryResponseDto response = laboratoryService.updateLab(laboratoryId, request, member);
 
         return ResponseEntity.ok(
                 ResponseDto.of(response, "연구실 수정 성공")
@@ -86,9 +89,10 @@ public class LaboratoryController implements LaboratoryApiSpecification {
 
     @DeleteMapping("/{laboratoryId}")
     public ResponseEntity<ResponseDto<Long>> deleteLaboratory(
+            @AuthenticationPrincipal Member member,
             @PathVariable Long laboratoryId
     ) {
-        laboratoryService.deleteLab(laboratoryId);
+        laboratoryService.deleteLab(member, laboratoryId);
         return ResponseEntity.ok(
                 ResponseDto.of(laboratoryId, "연구실 삭제 완료")
         );
