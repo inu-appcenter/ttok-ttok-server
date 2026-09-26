@@ -44,7 +44,9 @@ public enum ErrorCode {
     ONBOARDING_ALREADY_DONE(HttpStatus.BAD_REQUEST, "ONBOARDING_ALREADY_DONE", "이미 온보딩을 완료했습니다."),
     BUG_REPORT_NOT_FOUND(HttpStatus.NOT_FOUND, "BUG_REPORT_NOT_FOUND", "오류 제보가 존재하지 않습니다."),
     RESEARCH_AREA_CATEGORY_NOT_FOUND(HttpStatus.NOT_FOUND, "RESEARCH_AREA_CATEGORY_NOT_FOUND", "해당 카테고리가 존재하지 않습니다."),
-    INVALID_LAB_ACCESS(HttpStatus.FORBIDDEN, "INVALID_LAB_ACCESS", "해당 연구실에 접근 권한이 없습니다.");
+    INVALID_LAB_ACCESS(HttpStatus.FORBIDDEN, "INVALID_LAB_ACCESS", "해당 연구실에 접근 권한이 없습니다."),
+    PROFESSOR_ALREADY_LINKED(HttpStatus.BAD_REQUEST, "PROFESSOR_ALREADY_LINKED", "이미 다른 계정과 연동된 교수입니다."),
+    MEMBER_ALREADY_LINKED_TO_PROFESSOR(HttpStatus.BAD_REQUEST, "MEMBER_ALREADY_LINKED_TO_PROFESSOR", "이미 다른 교수와 연동된 계정입니다.");
 
     private final HttpStatus status;
     private final String code;

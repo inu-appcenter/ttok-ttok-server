@@ -63,6 +63,10 @@ public class Professor extends BaseEntity {
         this.email = email;
     }
 
+    public void linkMember(Member member) {
+        this.member = member;
+    }
+
     public static Professor create(
             String name,
             String positionRaw,

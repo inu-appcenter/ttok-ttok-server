@@ -2,7 +2,10 @@ package com.inuappcenter.team_2_project_server.domain.member.service;
 
 import com.inuappcenter.team_2_project_server.domain.department.College;
 import com.inuappcenter.team_2_project_server.domain.department.Department;
+import com.inuappcenter.team_2_project_server.domain.member.dto.response.ProfessorResponseDto;
+import com.inuappcenter.team_2_project_server.domain.member.entity.Member;
 import com.inuappcenter.team_2_project_server.domain.member.entity.Professor;
+import com.inuappcenter.team_2_project_server.domain.member.repository.MemberRepository;
 import com.inuappcenter.team_2_project_server.domain.member.repository.ProfessorRepository;
 import com.inuappcenter.team_2_project_server.global.error.ex.ErrorCode;
 import com.inuappcenter.team_2_project_server.global.error.ex.MyException;
@@ -16,6 +19,7 @@ import org.springframework.transaction.annotation.Transactional;
 public class ProfessorService {
 
     private final ProfessorRepository professorRepository;
+    private final MemberRepository memberRepository;
 
     /**
      * 교수 ID로 단건 조회
@@ -49,5 +53,28 @@ public class ProfessorService {
                 .orElseGet(() -> professorRepository.save(
                         Professor.create(name, positionRaw, college, department, phoneNumber, email)
                 ));
+    }
+
+    /**
+     * 관리자가 본인 확인을 마친 교수 계정을 기존 Professor 레코드와 연동
+     */
+    @Transactional
+    public ProfessorResponseDto linkMember(Long professorId, Long memberId) {
+        Professor professor = getProfessor(professorId);
+
+        if (professor.getMember() != null) {
+            throw new MyException(ErrorCode.PROFESSOR_ALREADY_LINKED);
+        }
+
+        if (professorRepository.existsByMemberId(memberId)) {
+            throw new MyException(ErrorCode.MEMBER_ALREADY_LINKED_TO_PROFESSOR);
+        }
+
+        Member member = memberRepository.findById(memberId)
+                .orElseThrow(() -> new MyException(ErrorCode.MEMBER_NOT_FOUND));
+
+        professor.linkMember(member);
+
+        return ProfessorResponseDto.from(professor);
     }
 }
