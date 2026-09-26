@@ -10,7 +10,7 @@ import com.inuappcenter.team_2_project_server.domain.laboratory.repository.Labor
 import com.inuappcenter.team_2_project_server.domain.laboratory.repository.PublicationRepository;
 import com.inuappcenter.team_2_project_server.domain.member.entity.Member;
 import com.inuappcenter.team_2_project_server.domain.member.entity.Professor;
-import com.inuappcenter.team_2_project_server.domain.member.repository.ProfessorRepository;
+import com.inuappcenter.team_2_project_server.domain.member.service.ProfessorService;
 import com.inuappcenter.team_2_project_server.domain.member.service.ResearcherService;
 import com.inuappcenter.team_2_project_server.global.error.ex.ErrorCode;
 import com.inuappcenter.team_2_project_server.global.error.ex.MyException;
@@ -30,7 +30,7 @@ import java.util.stream.Collectors;
 @Transactional
 public class LaboratoryService {
     private final LaboratoryRepository laboratoryRepository;
-    private final ProfessorRepository professorRepository;
+    private final ProfessorService professorService;
     private final PublicationRepository publicationRepository;
     private final ResearcherService researcherService;
 
@@ -40,8 +40,7 @@ public class LaboratoryService {
     public LaboratoryResponseDto createLab(
             LaboratoryCreateRequestDto request
     ) {
-        Professor professor = professorRepository.findById(request.professorId())
-                .orElseThrow(() -> new MyException(ErrorCode.PROFESSOR_NOT_FOUND));
+        Professor professor = professorService.getProfessor(request.professorId());
 
         if (laboratoryRepository.existsByLabNameAndProfessorIdAndDepartment(
                 request.labName(), request.professorId(), request.department()

@@ -16,7 +16,7 @@ import com.inuappcenter.team_2_project_server.domain.laboratory.repository.Publi
 import com.inuappcenter.team_2_project_server.domain.laboratory.repository.ResearchAreaCategoryRepository;
 import com.inuappcenter.team_2_project_server.domain.laboratory.repository.ResearchKeywordRepository;
 import com.inuappcenter.team_2_project_server.domain.member.entity.Professor;
-import com.inuappcenter.team_2_project_server.domain.member.repository.ProfessorRepository;
+import com.inuappcenter.team_2_project_server.domain.member.service.ProfessorService;
 import com.inuappcenter.team_2_project_server.global.error.ex.ErrorCode;
 import com.inuappcenter.team_2_project_server.global.error.ex.MyException;
 import lombok.RequiredArgsConstructor;
@@ -38,7 +38,7 @@ import java.util.stream.Collectors;
 public class LaboratoryExcelImportService {
 
     private final ExcelLabParser excelLabParser;
-    private final ProfessorRepository professorRepository;
+    private final ProfessorService professorService;
     private final LaboratoryRepository laboratoryRepository;
     private final ResearchKeywordRepository researchKeywordRepository;
     private final LaboratoryResearchKeywordRepository laboratoryResearchKeywordRepository;
@@ -87,12 +87,11 @@ public class LaboratoryExcelImportService {
                 throw new MyException(ErrorCode.PROFESSOR_NOT_FOUND_IN_EXCEL);
             }
 
-            Professor professor = professorRepository.findByDepartmentAndNameAndEmail(
-                            row.department(),
-                            row.professorName(),
-                            row.professorEmail()
-                    )
-                    .orElseThrow(() -> new MyException(ErrorCode.PROFESSOR_NOT_FOUND));
+            Professor professor = professorService.getByDepartmentAndNameAndEmail(
+                    row.department(),
+                    row.professorName(),
+                    row.professorEmail()
+            );
 
 
             String researchFieldRaw = professorInfo.researchAreaRaw();
@@ -127,17 +126,14 @@ public class LaboratoryExcelImportService {
      */
     private void saveProfessors(List<ProfessorExcelRow> professorExcelRows) {
         for (ProfessorExcelRow row : professorExcelRows) {
-            professorRepository.findByDepartmentAndNameAndEmail(row.department(), row.name(), row.email())
-                    .orElseGet(() -> professorRepository.save(
-                            Professor.create(
-                                    row.name(),
-                                    row.position(),
-                                    row.college(),
-                                    row.department(),
-                                    row.number(),
-                                    row.email()
-                            )
-                    ));
+            professorService.createIfNotExists(
+                    row.name(),
+                    row.position(),
+                    row.college(),
+                    row.department(),
+                    row.number(),
+                    row.email()
+            );
         }
 
     }

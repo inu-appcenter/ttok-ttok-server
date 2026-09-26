@@ -18,7 +18,7 @@ import com.inuappcenter.team_2_project_server.domain.laboratory.repository.Resea
 import com.inuappcenter.team_2_project_server.domain.laboratory.service.ExcelLabParser;
 import com.inuappcenter.team_2_project_server.domain.laboratory.service.LaboratoryExcelImportService;
 import com.inuappcenter.team_2_project_server.domain.member.entity.Professor;
-import com.inuappcenter.team_2_project_server.domain.member.repository.ProfessorRepository;
+import com.inuappcenter.team_2_project_server.domain.member.service.ProfessorService;
 import com.inuappcenter.team_2_project_server.global.error.ex.ErrorCode;
 import com.inuappcenter.team_2_project_server.global.error.ex.MyException;
 import org.junit.jupiter.api.BeforeEach;
@@ -37,7 +37,7 @@ import static org.mockito.Mockito.*;
 class LaboratoryExcelImportServiceTest {
 
     private ExcelLabParser excelLabParser;
-    private ProfessorRepository professorRepository;
+    private ProfessorService professorService;
     private LaboratoryRepository laboratoryRepository;
     private ResearchKeywordRepository researchKeywordRepository;
     private LaboratoryResearchKeywordRepository laboratoryResearchKeywordRepository;
@@ -48,7 +48,7 @@ class LaboratoryExcelImportServiceTest {
     @BeforeEach
     void setUp() {
         excelLabParser = mock(ExcelLabParser.class);
-        professorRepository = mock(ProfessorRepository.class);
+        professorService = mock(ProfessorService.class);
         laboratoryRepository = mock(LaboratoryRepository.class);
         researchKeywordRepository = mock(ResearchKeywordRepository.class);
         laboratoryResearchKeywordRepository = mock(LaboratoryResearchKeywordRepository.class);
@@ -56,7 +56,7 @@ class LaboratoryExcelImportServiceTest {
         researchAreaCategoryRepository = mock(ResearchAreaCategoryRepository.class);
         laboratoryExcelImportService = new LaboratoryExcelImportService(
                 excelLabParser,
-                professorRepository,
+                professorService,
                 laboratoryRepository,
                 researchKeywordRepository,
                 laboratoryResearchKeywordRepository,
@@ -75,13 +75,11 @@ class LaboratoryExcelImportServiceTest {
 
         given(excelLabParser.parseProfessors(file)).willReturn(List.of(professorRow));
         given(excelLabParser.parseLaboratories(file)).willReturn(List.of(laboratoryRow));
-        given(professorRepository.findByDepartmentAndNameAndEmail(
+        given(professorService.getByDepartmentAndNameAndEmail(
                 Department.COMPUTER_ENGINEERING,
                 "홍길동",
                 "hong@inu.ac.kr"
-        )).willReturn(Optional.empty())
-                .willReturn(Optional.of(professor));
-        given(professorRepository.save(any(Professor.class))).willReturn(professor);
+        )).willReturn(professor);
         given(laboratoryRepository.existsByLabNameAndProfessorAndDepartment(
                 "AI연구실", professor, Department.COMPUTER_ENGINEERING
         )).willReturn(false);
@@ -94,7 +92,10 @@ class LaboratoryExcelImportServiceTest {
 
         laboratoryExcelImportService.importExcel(file);
 
-        verify(professorRepository).save(any(Professor.class));
+        verify(professorService).createIfNotExists(
+                "홍길동", "교수", College.COLLEGE_OF_INFORMATION_TECHNOLOGY, Department.COMPUTER_ENGINEERING,
+                "032-000-0000", "hong@inu.ac.kr"
+        );
         verify(laboratoryRepository).save(any(Laboratory.class));
         verify(researchKeywordRepository).save(any(ResearchArea.class));
         verify(laboratoryResearchKeywordRepository).save(any(LaboratoryResearchArea.class));
@@ -109,18 +110,17 @@ class LaboratoryExcelImportServiceTest {
 
         given(excelLabParser.parseProfessors(file)).willReturn(List.of(professorRow));
         given(excelLabParser.parseLaboratories(file)).willReturn(List.of(laboratoryRow));
-        given(professorRepository.findByDepartmentAndNameAndEmail(
+        given(professorService.getByDepartmentAndNameAndEmail(
                 Department.COMPUTER_ENGINEERING,
                 "홍길동",
                 "hong@inu.ac.kr"
-        )).willReturn(Optional.of(professor));
+        )).willReturn(professor);
         given(laboratoryRepository.existsByLabNameAndProfessorAndDepartment(
                 "AI연구실", professor, Department.COMPUTER_ENGINEERING
         )).willReturn(true);
 
         laboratoryExcelImportService.importExcel(file);
 
-        verify(professorRepository, never()).save(any(Professor.class));
         verify(laboratoryRepository, never()).save(any(Laboratory.class));
         verify(researchKeywordRepository, never()).findByArea(anyString());
         verify(laboratoryResearchKeywordRepository, never()).save(any(LaboratoryResearchArea.class));
