@@ -92,8 +92,8 @@ class LaboratoryExcelImportServiceTest {
 
         laboratoryExcelImportService.importExcel(file);
 
-        verify(professorService).createIfNotExists(
-                "홍길동", "교수", College.COLLEGE_OF_INFORMATION_TECHNOLOGY, Department.COMPUTER_ENGINEERING,
+        verify(professorService).upsertFromExcel(
+                "홍길동", "교수", Department.COMPUTER_ENGINEERING,
                 "032-000-0000", "hong@inu.ac.kr"
         );
         verify(laboratoryRepository).save(any(Laboratory.class));
@@ -287,7 +287,6 @@ class LaboratoryExcelImportServiceTest {
         return Professor.create(
                 "홍길동",
                 "교수",
-                College.COLLEGE_OF_INFORMATION_TECHNOLOGY,
                 Department.COMPUTER_ENGINEERING,
                 "032-000-0000",
                 "hong@inu.ac.kr"
