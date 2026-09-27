@@ -35,15 +35,21 @@ public class LaboratoryService {
     private final ResearcherService researcherService;
 
     /**
-     * 연구실 수동 생성 메서드
+     * 연구실 수동 생성 메서드. 로그인한 계정과 연동된 교수 본인 명의로만 생성할 수 있다
+     * (엑셀 데이터엔 있지만 아직 연구실이 없는 교수가 직접 개설하는 용도)
      */
     public LaboratoryResponseDto createLab(
+            Member member,
             LaboratoryCreateRequestDto request
     ) {
-        Professor professor = professorService.getProfessor(request.professorId());
+        Professor professor = professorService.getByMemberId(member.getId());
+
+        if (laboratoryRepository.existsByProfessorId(professor.getId())) {
+            throw new MyException(ErrorCode.PROFESSOR_ALREADY_HAS_LABORATORY);
+        }
 
         if (laboratoryRepository.existsByLabNameAndProfessorIdAndDepartment(
-                request.labName(), request.professorId(), request.department()
+                request.labName(), professor.getId(), request.department()
         )) {
             throw new MyException(ErrorCode.DUPLICATED_LABORATORY);
         }

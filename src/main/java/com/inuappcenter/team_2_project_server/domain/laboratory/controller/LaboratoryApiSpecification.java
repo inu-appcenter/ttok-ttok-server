@@ -69,7 +69,13 @@ public interface LaboratoryApiSpecification {
             @RequestPart MultipartFile file
     );
 
-    @Operation(summary = "연구실 생성", description = "교수 ID를 기준으로 연구실을 수동 생성합니다.")
+    @Operation(
+            summary = "연구실 생성",
+            description = """
+                    로그인한 계정과 연동된 교수 본인 명의로 연구실을 생성합니다 (담당 교수는 요청으로 받지 않고 서버가 결정합니다).
+                    엑셀 데이터엔 있지만 아직 연구실이 없는 교수가 직접 개설하는 용도라, 이미 본인 명의의 연구실이 있으면 생성할 수 없습니다.
+                    """
+    )
     @io.swagger.v3.oas.annotations.parameters.RequestBody(
             description = "생성할 연구실 정보. 연구분야는 쉼표 문자열이 아니라 배열로 전달합니다.",
             required = true,
@@ -87,7 +93,6 @@ public interface LaboratoryApiSpecification {
                                 "undergraduateStudentCount": 7
                               },
                               "introduction": "소프트웨어 품질과 개발 프로세스를 연구합니다.",
-                              "professorId": 1,
                               "labUrl": "https://example.com/lab",
                               "researchAreas": [
                                 "소프트웨어공학",
@@ -144,18 +149,28 @@ public interface LaboratoryApiSpecification {
             ),
             @ApiResponse(
                     responseCode = "400",
-                    description = "존재하지 않는 교수 또는 중복 연구실",
+                    description = "연동된 교수 계정이 아님 / 이미 본인 명의의 연구실이 있음 / 중복 연구실",
                     content = @Content(
                             mediaType = "application/json",
                             schema = @Schema(implementation = ResponseDto.class),
                             examples = {
                                     @ExampleObject(
-                                            name = "존재하지 않는 교수",
+                                            name = "연동된 교수 계정이 아님",
                                             value = """
                                                     {
                                                       "data": null,
                                                       "code": "PROFESSOR_NOT_FOUND",
                                                       "message": "존재하지 않는 교수입니다."
+                                                    }
+                                                    """
+                                    ),
+                                    @ExampleObject(
+                                            name = "이미 본인 명의의 연구실이 있음",
+                                            value = """
+                                                    {
+                                                      "data": null,
+                                                      "code": "PROFESSOR_ALREADY_HAS_LABORATORY",
+                                                      "message": "이미 본인 명의의 연구실이 있어 추가로 생성할 수 없습니다."
                                                     }
                                                     """
                                     ),
@@ -174,6 +189,7 @@ public interface LaboratoryApiSpecification {
             )
     })
     ResponseEntity<ResponseDto<LaboratoryResponseDto>> createLaboratory(
+            @AuthenticationPrincipal Member member,
             @RequestBody LaboratoryCreateRequestDto request
     );
 

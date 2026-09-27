@@ -41,9 +41,10 @@ public class LaboratoryController implements LaboratoryApiSpecification {
 
     @PostMapping
     public ResponseEntity<ResponseDto<LaboratoryResponseDto>> createLaboratory(
+            @AuthenticationPrincipal Member member,
             @Valid @RequestBody LaboratoryCreateRequestDto request
     ) {
-        LaboratoryResponseDto response = laboratoryService.createLab(request);
+        LaboratoryResponseDto response = laboratoryService.createLab(member, request);
 
         return ResponseEntity.ok(
                 ResponseDto.of(response, "연구실 생성 성공")
