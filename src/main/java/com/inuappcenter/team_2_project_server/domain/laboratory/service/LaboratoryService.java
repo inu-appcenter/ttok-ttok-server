@@ -99,7 +99,7 @@ public class LaboratoryService {
         Laboratory laboratory = laboratoryRepository.findById(laboratoryId)
                 .orElseThrow(() -> new MyException(ErrorCode.LABORATORY_NOT_FOUND));
 
-        researcherService.validateAffiliation(member, laboratoryId);
+        validateAccess(member, laboratoryId);
 
         LaboratoryCapacityUpdateRequestDto capacity = request.capacity();
 
@@ -127,9 +127,21 @@ public class LaboratoryService {
         Laboratory laboratory = laboratoryRepository.findById(laboratoryId)
                 .orElseThrow(() -> new MyException(ErrorCode.LABORATORY_NOT_FOUND));
 
-        researcherService.validateAffiliation(member, laboratoryId);
+        validateAccess(member, laboratoryId);
 
         laboratoryRepository.delete(laboratory);
+    }
+
+    /**
+     * 이 연구실을 수정/삭제할 권한이 있는지 검증 — 소속 연구자이거나, 연동된 담당 교수 본인이면 통과
+     */
+    private void validateAccess(Member member, Long laboratoryId) {
+        boolean isResearcher = researcherService.isAffiliated(member.getId(), laboratoryId);
+        boolean isOwnerProfessor = laboratoryRepository.existsByIdAndProfessor_MemberId(laboratoryId, member.getId());
+
+        if (!isResearcher && !isOwnerProfessor) {
+            throw new MyException(ErrorCode.INVALID_LAB_ACCESS);
+        }
     }
 
     // 요청으로 들어온 String값을 내부 ResearchFieldRaw에 저장하는 메서드

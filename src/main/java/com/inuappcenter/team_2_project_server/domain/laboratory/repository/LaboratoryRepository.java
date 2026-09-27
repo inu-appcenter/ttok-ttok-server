@@ -20,6 +20,9 @@ public interface LaboratoryRepository extends JpaRepository<Laboratory, Long> {
 
     boolean existsByLabNameAndProfessorIdAndDepartment(String labName, Long professorId, Department department);
 
+    // 이 연구실의 담당 교수와 연동된 계정인지 확인 (교수 본인 수정 권한 검증용)
+    boolean existsByIdAndProfessor_MemberId(Long laboratoryId, Long memberId);
+
     @EntityGraph(attributePaths = "professor")
     Page<Laboratory> findByLabNameContainingIgnoreCaseOrProfessor_NameContainingIgnoreCase(
             String labNameKeyword,
