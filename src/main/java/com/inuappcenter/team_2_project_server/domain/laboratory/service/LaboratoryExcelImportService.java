@@ -126,10 +126,9 @@ public class LaboratoryExcelImportService {
      */
     private void saveProfessors(List<ProfessorExcelRow> professorExcelRows) {
         for (ProfessorExcelRow row : professorExcelRows) {
-            professorService.createIfNotExists(
+            professorService.upsertFromExcel(
                     row.name(),
                     row.position(),
-                    row.college(),
                     row.department(),
                     row.number(),
                     row.email()

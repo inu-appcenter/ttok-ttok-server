@@ -41,7 +41,6 @@ public class OnboardingService {
         }
 
         // 교수는 로그인 시점에 이미 PROFESSOR로 분류되어 있으므로 학생용 질문(purpose)을 보지 않고 바로 온보딩을 완료한다.
-        // 실제 연동은 관리자가 연락받아 확인 후 별도 API(POST /api/professor/link)로 확정한다
         if (member.getUserType() == UserType.PROFESSOR) {
             member.updateIsNew();
             return MemberResponseDto.from(member);
