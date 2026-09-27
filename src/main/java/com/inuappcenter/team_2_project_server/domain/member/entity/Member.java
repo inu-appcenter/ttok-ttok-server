@@ -2,6 +2,7 @@ package com.inuappcenter.team_2_project_server.domain.member.entity;
 
 import com.inuappcenter.team_2_project_server.domain.department.College;
 import com.inuappcenter.team_2_project_server.domain.department.Department;
+import com.inuappcenter.team_2_project_server.domain.member.enums.UserType;
 import com.inuappcenter.team_2_project_server.global.entity.BaseEntity;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
@@ -37,9 +38,6 @@ public class Member extends BaseEntity implements UserDetails {
     private String nickName;
 
     @Enumerated(EnumType.STRING)
-    private College college;
-
-    @Enumerated(EnumType.STRING)
     private Department department;
 
     private String email;
@@ -57,10 +55,13 @@ public class Member extends BaseEntity implements UserDetails {
 
     private String role;
 
+    @Column(name = "user_type")
+    @Enumerated(EnumType.STRING)
+    private UserType userType;
+
     private Member(
             String studentNumber,
             String nickName,
-            College college,
             Department department,
             String email,
             LocalDateTime lastLoginAt,
@@ -68,7 +69,6 @@ public class Member extends BaseEntity implements UserDetails {
     ) {
         this.studentNumber = studentNumber;
         this.nickName = nickName;
-        this.college = college;
         this.department = department;
         this.email = email;
         this.lastLoginAt = lastLoginAt;
@@ -78,23 +78,26 @@ public class Member extends BaseEntity implements UserDetails {
     public static Member create(
             String studentNumber,
             String nickName,
-            College college,
             Department department,
             String email
     ) {
-        return new Member(studentNumber, nickName, college, department, email, LocalDateTime.now(), "ROLE_USER");
+        return new Member(studentNumber, nickName, department, email, LocalDateTime.now(), "ROLE_USER");
     }
 
     // 외부에서 role을 받아서 member를 만드는 정적 팩토리 메서드
     public static Member createWithRole(
             String studentNumber,
             String nickName,
-            College college,
             Department department,
             String email,
             String role
     ) {
-        return new Member(studentNumber, nickName, college, department, email, LocalDateTime.now(), role);
+        return new Member(studentNumber, nickName, department, email, LocalDateTime.now(), role);
+    }
+
+    // college는 department에 종속된 값이라 별도로 저장하지 않고 그때그때 계산한다
+    public College getCollege() {
+        return department == null ? null : department.getCollegeName();
     }
 
     @Override
@@ -150,6 +153,10 @@ public class Member extends BaseEntity implements UserDetails {
 
     public void updateIsNew() {
         this.isNew = false;
+    }
+
+    public void assignUserType(UserType userType) {
+        this.userType = userType;
     }
 
     public void recordLogin() {
