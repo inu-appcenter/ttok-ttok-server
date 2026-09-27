@@ -13,6 +13,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.test.util.ReflectionTestUtils;
 
+import java.util.List;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -179,6 +180,47 @@ class ProfessorServiceTest {
                 .isInstanceOf(MyException.class)
                 .extracting("errorCode")
                 .isEqualTo(ErrorCode.PROFESSOR_NOT_FOUND);
+    }
+
+    @Test
+    void linkByDepartmentAndName_links_the_single_unlinked_match() {
+        Professor professor = professor();
+        Member member = mock(Member.class);
+        given(professorRepository.findAllByDepartmentAndNameAndMemberIsNull(
+                Department.COMPUTER_ENGINEERING, "홍길동"
+        )).willReturn(List.of(professor));
+
+        professorService.linkByDepartmentAndName(member, Department.COMPUTER_ENGINEERING, "홍길동");
+
+        assertThat(professor.getMember()).isEqualTo(member);
+    }
+
+    @Test
+    void linkByDepartmentAndName_fails_when_no_candidate() {
+        given(professorRepository.findAllByDepartmentAndNameAndMemberIsNull(
+                Department.COMPUTER_ENGINEERING, "홍길동"
+        )).willReturn(List.of());
+
+        assertThatThrownBy(() -> professorService.linkByDepartmentAndName(
+                mock(Member.class), Department.COMPUTER_ENGINEERING, "홍길동"
+        ))
+                .isInstanceOf(MyException.class)
+                .extracting("errorCode")
+                .isEqualTo(ErrorCode.PROFESSOR_NOT_FOUND);
+    }
+
+    @Test
+    void linkByDepartmentAndName_fails_when_multiple_candidates_in_same_department() {
+        given(professorRepository.findAllByDepartmentAndNameAndMemberIsNull(
+                Department.COMPUTER_ENGINEERING, "홍길동"
+        )).willReturn(List.of(professor(), professor()));
+
+        assertThatThrownBy(() -> professorService.linkByDepartmentAndName(
+                mock(Member.class), Department.COMPUTER_ENGINEERING, "홍길동"
+        ))
+                .isInstanceOf(MyException.class)
+                .extracting("errorCode")
+                .isEqualTo(ErrorCode.PROFESSOR_NAME_AMBIGUOUS);
     }
 
     private Professor professor() {

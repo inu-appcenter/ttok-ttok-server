@@ -3,6 +3,7 @@ package com.inuappcenter.team_2_project_server.domain.member.service;
 import com.inuappcenter.team_2_project_server.domain.department.Department;
 import com.inuappcenter.team_2_project_server.domain.member.dto.request.ProfessorUpdateRequestDto;
 import com.inuappcenter.team_2_project_server.domain.member.dto.response.ProfessorResponseDto;
+import com.inuappcenter.team_2_project_server.domain.member.entity.Member;
 import com.inuappcenter.team_2_project_server.domain.member.entity.Professor;
 import com.inuappcenter.team_2_project_server.domain.member.repository.ProfessorRepository;
 import com.inuappcenter.team_2_project_server.global.error.ex.ErrorCode;
@@ -11,6 +12,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
 import java.util.Optional;
 
 @Service
@@ -25,6 +27,14 @@ public class ProfessorService {
      */
     public Professor getProfessor(Long professorId) {
         return professorRepository.findById(professorId)
+                .orElseThrow(() -> new MyException(ErrorCode.PROFESSOR_NOT_FOUND));
+    }
+
+    /**
+     * 로그인한 계정(memberId)과 연동된 교수를 조회. 연동 안 된 계정이면 404
+     */
+    public Professor getByMemberId(Long memberId) {
+        return professorRepository.findByMemberId(memberId)
                 .orElseThrow(() -> new MyException(ErrorCode.PROFESSOR_NOT_FOUND));
     }
 
@@ -78,11 +88,29 @@ public class ProfessorService {
             Long memberId,
             ProfessorUpdateRequestDto request
     ) {
-        Professor professor = professorRepository.findByMemberId(memberId)
-                .orElseThrow(() -> new MyException(ErrorCode.PROFESSOR_NOT_FOUND));
+        Professor professor = getByMemberId(memberId);
 
         professor.updateProfile(request.positionRaw(), request.phoneNumber(), request.email());
 
         return ProfessorResponseDto.from(professor);
+    }
+
+    /**
+     * 온보딩에서 교수 본인이 입력한 학과+이름으로 아직 연동되지 않은 교수 레코드를 찾아 계정과 연결한다.
+     * 이름만으로는 동명이인이 있을 수 있어 학과까지 받아 후보를 좁힌다.
+     * 후보가 없으면 존재하지 않는 교수, 그래도 여러 명이면(같은 학과 동명이인) 자동 연동 불가로 처리한다
+     */
+    @Transactional
+    public void linkByDepartmentAndName(Member member, Department department, String name) {
+        List<Professor> candidates = professorRepository.findAllByDepartmentAndNameAndMemberIsNull(department, name);
+
+        if (candidates.isEmpty()) {
+            throw new MyException(ErrorCode.PROFESSOR_NOT_FOUND);
+        }
+        if (candidates.size() > 1) {
+            throw new MyException(ErrorCode.PROFESSOR_NAME_AMBIGUOUS);
+        }
+
+        candidates.get(0).linkMember(member);
     }
 }
