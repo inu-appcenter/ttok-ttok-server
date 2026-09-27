@@ -63,8 +63,15 @@ public class Professor extends BaseEntity {
         this.email = email;
     }
 
-    public void linkMember(Member member) {
-        this.member = member;
+    // 엑셀 재임포트로 원본 데이터를 갱신. 이미 계정과 연동된 교수는 본인이 직접 고쳤을 수 있으니 덮어쓰지 않는다 (호출부에서 그 여부를 판단)
+    public void updateFromExcel(
+            String positionRaw,
+            College college,
+            String phoneNumber
+    ) {
+        this.positionRaw = positionRaw;
+        this.college = college;
+        this.phoneNumber = phoneNumber;
     }
 
     public static Professor create(
