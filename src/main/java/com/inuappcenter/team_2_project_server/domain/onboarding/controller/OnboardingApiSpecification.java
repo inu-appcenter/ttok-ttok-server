@@ -27,8 +27,10 @@ public interface OnboardingApiSpecification {
 
                     - purpose = RESEARCHER: 소속 연구실로 연구자 등록 + 연구실 리뷰 저장, coffeeChatAllowed 가 true 면 커피챗까지 생성
                     - purpose = FINDER: 별도 저장 없이 온보딩만 완료 (laboratoryId 등 나머지 필드는 무시)
-                    - 교수 계정(로그인 시 자동으로 PROFESSOR 로 분류됨)은 purpose 를 포함한 모든 필드를 보지 않고 바로 온보딩을 완료합니다.
-                      실제 연동은 관리자가 연락받아 확인 후 별도 API(POST /api/professor/link)로 확정합니다.
+                    - purpose = PROFESSOR: 교수 계정(로그인 시 학번/교번 자릿수로 자동 분류됨)이 사용. 다른 필드는 다 무시하고
+                      professorDepartment + professorName 으로 아직 아무 계정과도 연동되지 않은 교수 레코드를 찾아 자동으로 연동합니다
+                      (이름만으로는 동명이인이 있을 수 있어 학과까지 받습니다). 연동되는 순간 그 교수가 담당하는 연구실의 수정 권한도 함께 생기고,
+                      회원의 department 도 이 값으로 채워집니다. 그래도 같은 학과에 동명이인이 있으면 자동 연동에 실패합니다.
 
                     coreTime / weeklyMeeting / doings 는 연구실 리뷰 기본 선택지 값을 그대로 보냅니다. ("있음", "주 1회" 등)
                     커피챗 연락처는 EMAIL 형식이거나 https://open.kakao.com/ 로 시작하는 링크여야 합니다.
@@ -67,6 +69,13 @@ public interface OnboardingApiSpecification {
                                       "purpose": "FINDER",
                                       "coffeeChatAllowed": false
                                     }
+                                    """),
+                            @ExampleObject(name = "교수 (본인 학과+이름으로 연동)", value = """
+                                    {
+                                      "purpose": "PROFESSOR",
+                                      "professorDepartment": "COMPUTER_ENGINEERING",
+                                      "professorName": "홍길동"
+                                    }
                                     """)
                     }
             )
@@ -98,17 +107,42 @@ public interface OnboardingApiSpecification {
             ),
             @ApiResponse(
                     responseCode = "400",
-                    description = "요청 값 검증 실패 / 이미 온보딩 완료 / 이미 등록된 연구자 / 이미 작성한 리뷰 / 이미 생성한 커피챗",
+                    description = "요청 값 검증 실패 / 이미 온보딩 완료 / 이미 등록된 연구자 / 이미 작성한 리뷰 / 이미 생성한 커피챗 / 학과+이름과 일치하는 교수 없음 또는 동명이인으로 자동 연동 실패",
                     content = @Content(
                             mediaType = "application/json",
                             schema = @Schema(implementation = ResponseDto.class),
-                            examples = @ExampleObject(value = """
-                                    {
-                                      "data": null,
-                                      "code": "ONBOARDING_ALREADY_DONE",
-                                      "message": "이미 온보딩을 완료했습니다."
-                                    }
-                                    """)
+                            examples = {
+                                    @ExampleObject(
+                                            name = "이미 온보딩 완료",
+                                            value = """
+                                                    {
+                                                      "data": null,
+                                                      "code": "ONBOARDING_ALREADY_DONE",
+                                                      "message": "이미 온보딩을 완료했습니다."
+                                                    }
+                                                    """
+                                    ),
+                                    @ExampleObject(
+                                            name = "일치하는 교수 없음",
+                                            value = """
+                                                    {
+                                                      "data": null,
+                                                      "code": "PROFESSOR_NOT_FOUND",
+                                                      "message": "존재하지 않는 교수입니다."
+                                                    }
+                                                    """
+                                    ),
+                                    @ExampleObject(
+                                            name = "동명이인으로 자동 연동 실패",
+                                            value = """
+                                                    {
+                                                      "data": null,
+                                                      "code": "PROFESSOR_NAME_AMBIGUOUS",
+                                                      "message": "동일한 이름의 교수가 여러 명 있어 자동으로 연동할 수 없습니다."
+                                                    }
+                                                    """
+                                    )
+                            }
                     )
             ),
             @ApiResponse(

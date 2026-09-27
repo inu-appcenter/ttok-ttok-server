@@ -91,6 +91,11 @@ public class Professor extends BaseEntity {
         }
     }
 
+    // 온보딩에서 본인 이름으로 검색해 찾아낸 교수 레코드에 로그인 계정을 연결
+    public void linkMember(Member member) {
+        this.member = member;
+    }
+
     public static Professor create(
             String name,
             String positionRaw,

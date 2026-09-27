@@ -1,5 +1,6 @@
 package com.inuappcenter.team_2_project_server.domain.onboarding.dto;
 
+import com.inuappcenter.team_2_project_server.domain.department.Department;
 import com.inuappcenter.team_2_project_server.domain.laboratory.enums.ContactType;
 import com.inuappcenter.team_2_project_server.domain.member.enums.UserType;
 import jakarta.validation.constraints.AssertTrue;
@@ -17,6 +18,11 @@ public record OnboardingRequestDto(
         @NotNull
         UserType purpose,
 
+        // purpose = PROFESSOR 일 때만 사용. 학과+이름으로 검색해 아직 연동 안 된 교수 레코드를 자동으로 연결한다.
+        // 이름만으로는 동명이인이 있을 수 있어 학과까지 받는다
+        Department professorDepartment,
+        String professorName,
+
         // purpose = RESEARCHER 일 때만 사용
         Long laboratoryId,           // 소속 연구실
         String coreTime,             // "있음" / "없음"
@@ -28,6 +34,14 @@ public record OnboardingRequestDto(
         ContactType contactType,
         String contactValue
 ) {
+
+    @AssertTrue(message = "교수 온보딩에는 본인 학과와 이름이 필요합니다.")
+    public boolean isProfessorNamePresent() {
+        if (purpose != UserType.PROFESSOR) {
+            return true;
+        }
+        return professorDepartment != null && professorName != null && !professorName.isBlank();
+    }
 
     @AssertTrue(message = "연구생 온보딩에는 연구실, 코어타임, 미팅 빈도, 하는 일이 모두 필요합니다.")
     public boolean isResearcherFieldsPresent() {
