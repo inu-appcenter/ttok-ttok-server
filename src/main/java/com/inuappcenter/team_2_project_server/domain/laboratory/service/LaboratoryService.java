@@ -10,7 +10,7 @@ import com.inuappcenter.team_2_project_server.domain.laboratory.repository.Labor
 import com.inuappcenter.team_2_project_server.domain.laboratory.repository.PublicationRepository;
 import com.inuappcenter.team_2_project_server.domain.member.entity.Member;
 import com.inuappcenter.team_2_project_server.domain.member.entity.Professor;
-import com.inuappcenter.team_2_project_server.domain.member.repository.ProfessorRepository;
+import com.inuappcenter.team_2_project_server.domain.member.service.ProfessorService;
 import com.inuappcenter.team_2_project_server.domain.member.service.ResearcherService;
 import com.inuappcenter.team_2_project_server.global.error.ex.ErrorCode;
 import com.inuappcenter.team_2_project_server.global.error.ex.MyException;
@@ -30,21 +30,26 @@ import java.util.stream.Collectors;
 @Transactional
 public class LaboratoryService {
     private final LaboratoryRepository laboratoryRepository;
-    private final ProfessorRepository professorRepository;
+    private final ProfessorService professorService;
     private final PublicationRepository publicationRepository;
     private final ResearcherService researcherService;
 
     /**
-     * 연구실 수동 생성 메서드
+     * 연구실 수동 생성 메서드. 로그인한 계정과 연동된 교수 본인 명의로만 생성할 수 있다
+     * (엑셀 데이터엔 있지만 아직 연구실이 없는 교수가 직접 개설하는 용도)
      */
     public LaboratoryResponseDto createLab(
+            Member member,
             LaboratoryCreateRequestDto request
     ) {
-        Professor professor = professorRepository.findById(request.professorId())
-                .orElseThrow(() -> new MyException(ErrorCode.PROFESSOR_NOT_FOUND));
+        Professor professor = professorService.getByMemberId(member.getId());
+
+        if (laboratoryRepository.existsByProfessorId(professor.getId())) {
+            throw new MyException(ErrorCode.PROFESSOR_ALREADY_HAS_LABORATORY);
+        }
 
         if (laboratoryRepository.existsByLabNameAndProfessorIdAndDepartment(
-                request.labName(), request.professorId(), request.department()
+                request.labName(), professor.getId(), request.department()
         )) {
             throw new MyException(ErrorCode.DUPLICATED_LABORATORY);
         }
@@ -100,7 +105,7 @@ public class LaboratoryService {
         Laboratory laboratory = laboratoryRepository.findById(laboratoryId)
                 .orElseThrow(() -> new MyException(ErrorCode.LABORATORY_NOT_FOUND));
 
-        researcherService.validateAffiliation(member, laboratoryId);
+        validateAccess(member, laboratoryId);
 
         LaboratoryCapacityUpdateRequestDto capacity = request.capacity();
 
@@ -128,9 +133,21 @@ public class LaboratoryService {
         Laboratory laboratory = laboratoryRepository.findById(laboratoryId)
                 .orElseThrow(() -> new MyException(ErrorCode.LABORATORY_NOT_FOUND));
 
-        researcherService.validateAffiliation(member, laboratoryId);
+        validateAccess(member, laboratoryId);
 
         laboratoryRepository.delete(laboratory);
+    }
+
+    /**
+     * 이 연구실을 수정/삭제할 권한이 있는지 검증 — 소속 연구자이거나, 연동된 담당 교수 본인이면 통과
+     */
+    private void validateAccess(Member member, Long laboratoryId) {
+        boolean isResearcher = researcherService.isAffiliated(member.getId(), laboratoryId);
+        boolean isOwnerProfessor = laboratoryRepository.existsByIdAndProfessor_MemberId(laboratoryId, member.getId());
+
+        if (!isResearcher && !isOwnerProfessor) {
+            throw new MyException(ErrorCode.INVALID_LAB_ACCESS);
+        }
     }
 
     // 요청으로 들어온 String값을 내부 ResearchFieldRaw에 저장하는 메서드

@@ -40,7 +40,7 @@ class LoginTest {
     @Test
     void login_succeeds_with_existing_member() {
         LoginRequestDto request = new LoginRequestDto("20240001", "password");
-        Member member = Member.create("20240001", null, null, null, null);
+        Member member = Member.create("20240001", null, null, null);
 
         given(schoolAuthRepository.authenticate("20240001", "password"))
                 .willReturn(Optional.of(new LocalAuthLoginDto("20240001", "ROLE_USER")));
@@ -62,7 +62,7 @@ class LoginTest {
     @Test
     void login_creates_member_when_school_auth_succeeds_and_member_does_not_exist() {
         LoginRequestDto request = new LoginRequestDto("20240002", "password");
-        Member savedMember = Member.createWithRole("20240002", null, null, null, null, "ROLE_ADMIN");
+        Member savedMember = Member.createWithRole("20240002", null, null, null, "ROLE_ADMIN");
 
         given(schoolAuthRepository.authenticate("20240002", "password"))
                 .willReturn(Optional.of(new LocalAuthLoginDto("20240002", "ROLE_ADMIN")));

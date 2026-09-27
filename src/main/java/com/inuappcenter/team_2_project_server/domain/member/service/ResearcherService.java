@@ -52,11 +52,10 @@ public class ResearcherService {
     }
 
     /**
-     * 연구실 소속 검증
+     * 이 멤버가 이 연구실의 연구자(학부연구생/대학원생)로 등록되어 있는지 여부.
+     * 담당 교수 본인 여부는 이 서비스가 알 바 아니므로(그건 laboratory 도메인 데이터) 다루지 않는다 — 호출부에서 별도로 확인할 것
      */
-    public void validateAffiliation(Member member, Long laboratoryId) {
-        if (!researcherRepository.existsByMemberIdAndLaboratoryId(member.getId(), laboratoryId)) {
-            throw new MyException(ErrorCode.INVALID_LAB_ACCESS);
-        }
+    public boolean isAffiliated(Long memberId, Long laboratoryId) {
+        return researcherRepository.existsByMemberIdAndLaboratoryId(memberId, laboratoryId);
     }
 }
