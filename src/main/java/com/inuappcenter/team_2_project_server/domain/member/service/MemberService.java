@@ -8,6 +8,7 @@ import com.inuappcenter.team_2_project_server.domain.member.dto.request.TokenRei
 import com.inuappcenter.team_2_project_server.domain.member.dto.response.LoginResponseDto;
 import com.inuappcenter.team_2_project_server.domain.member.dto.response.MemberResponseDto;
 import com.inuappcenter.team_2_project_server.domain.member.entity.Member;
+import com.inuappcenter.team_2_project_server.domain.member.enums.UserType;
 import com.inuappcenter.team_2_project_server.domain.member.repository.MemberRepository;
 import com.inuappcenter.team_2_project_server.domain.member.repository.SchoolAuthRepository;
 import com.inuappcenter.team_2_project_server.global.error.ex.ErrorCode;
@@ -25,6 +26,8 @@ import java.util.List;
 @Transactional(readOnly = true)
 public class MemberService {
 
+    private static final int PROFESSOR_ID_LENGTH = 8;
+
     private final SchoolAuthRepository schoolAuthRepository;
     private final MemberRepository memberRepository;
     private final JwtTokenProvider jwtTokenProvider;
@@ -41,16 +44,22 @@ public class MemberService {
                 .orElseThrow(() -> new MyException(ErrorCode.INVALID_CREDENTIALS));
 
         Member member = memberRepository.findByStudentNumber(studentNumber)
-                .orElseGet(() -> memberRepository.save(
-                        Member.createWithRole(
-                                authResult.studentNumber(),
-                                authResult.studentNumber(),
-                                null,
-                                null,
-                                null,
-                                authResult.role()
-                        )
-                ));
+                .orElseGet(() -> {
+                    Member newMember = Member.createWithRole(
+                            authResult.studentNumber(), // 학번
+                            authResult.studentNumber(), // 닉네임
+                            null,                       // 학과
+                            null,                       // 단과대
+                            authResult.role()           // Security Role
+                    );
+
+                    // 학교 계정 체계상 교번은 8자리, 학번은 9자리라 자릿수만으로 교수 여부를 구분할 수 있다
+                    if (studentNumber.length() == PROFESSOR_ID_LENGTH) {
+                        newMember.assignUserType(UserType.PROFESSOR);
+                    }
+
+                    return memberRepository.save(newMember);
+                });
 
         member.recordLogin();
 
@@ -123,7 +132,6 @@ public class MemberService {
         Member member = Member.create(
                 request.studentNumber(),
                 request.nickName(),
-                request.college(),
                 request.department(),
                 request.email()
         );
