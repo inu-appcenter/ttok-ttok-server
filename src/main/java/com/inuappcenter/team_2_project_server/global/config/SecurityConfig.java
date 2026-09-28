@@ -54,6 +54,9 @@ public class SecurityConfig {
                         // 인증이 필요없는 API
                         .requestMatchers(HttpMethod.GET, "/api/laboratory/**").permitAll()
 
+                        // 내 정보 조회는 로그인한 유저 본인이면 누구나 가능 (아래 관리자 전용 규칙보다 먼저 와야 함)
+                        .requestMatchers(HttpMethod.GET, "/api/member/me").authenticated()
+
                         // 관리자 전용
                         .requestMatchers(HttpMethod.GET, "/api/member", "/api/member/**").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.POST, "/api/laboratory/import", "/api/laboratory/research-projects/sync").hasRole("ADMIN")
