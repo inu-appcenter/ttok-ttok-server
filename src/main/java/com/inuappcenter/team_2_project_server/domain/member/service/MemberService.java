@@ -1,5 +1,11 @@
 package com.inuappcenter.team_2_project_server.domain.member.service;
 
+import com.inuappcenter.team_2_project_server.domain.laboratory.dto.response.CoffeeChatResponseDto;
+import com.inuappcenter.team_2_project_server.domain.laboratory.dto.response.LabReviewResponseDto;
+import com.inuappcenter.team_2_project_server.domain.laboratory.dto.response.LaboratoryResponseDto;
+import com.inuappcenter.team_2_project_server.domain.laboratory.service.CoffeeChatService;
+import com.inuappcenter.team_2_project_server.domain.laboratory.service.LabReviewService;
+import com.inuappcenter.team_2_project_server.domain.laboratory.service.LaboratoryService;
 import com.inuappcenter.team_2_project_server.domain.member.dto.LocalAuthLoginDto;
 import com.inuappcenter.team_2_project_server.domain.member.dto.request.LoginRequestDto;
 import com.inuappcenter.team_2_project_server.domain.member.dto.request.MemberCreateRequestDto;
@@ -7,6 +13,7 @@ import com.inuappcenter.team_2_project_server.domain.member.dto.request.MemberUp
 import com.inuappcenter.team_2_project_server.domain.member.dto.request.TokenReissueRequestDto;
 import com.inuappcenter.team_2_project_server.domain.member.dto.response.LoginResponseDto;
 import com.inuappcenter.team_2_project_server.domain.member.dto.response.MemberResponseDto;
+import com.inuappcenter.team_2_project_server.domain.member.dto.response.ResearcherResponseDto;
 import com.inuappcenter.team_2_project_server.domain.member.entity.Member;
 import com.inuappcenter.team_2_project_server.domain.member.enums.UserType;
 import com.inuappcenter.team_2_project_server.domain.member.repository.MemberRepository;
@@ -31,6 +38,10 @@ public class MemberService {
     private final SchoolAuthRepository schoolAuthRepository;
     private final MemberRepository memberRepository;
     private final JwtTokenProvider jwtTokenProvider;
+    private final ResearcherService researcherService;
+    private final LaboratoryService laboratoryService;
+    private final CoffeeChatService coffeeChatService;
+    private final LabReviewService labReviewService;
 
     /**
      * 로그인 메서드
@@ -194,5 +205,27 @@ public class MemberService {
                 .orElseThrow(() -> new MyException(ErrorCode.MEMBER_NOT_FOUND));
 
         member.logout();
+    }
+
+    /**
+     * 내 정보 조회 메서드
+     */
+    @Transactional(readOnly = true)
+    public MemberResponseDto getMyInfo(Long memberId) {
+        Member member = memberRepository.findById(memberId)
+                .orElseThrow(() -> new MyException(ErrorCode.MEMBER_NOT_FOUND));
+
+        LaboratoryResponseDto laboratory = null;
+        CoffeeChatResponseDto coffeeChat = null;
+        LabReviewResponseDto labReview = null;
+
+        if (member.getUserType() == UserType.RESEARCHER) {
+            ResearcherResponseDto researcher = researcherService.getByMemberId(memberId);
+            laboratory = laboratoryService.getLab(researcher.laboratoryId());
+            coffeeChat = coffeeChatService.getMyCoffeeChat(memberId);
+            labReview = labReviewService.getMyLabReview(memberId);
+        }
+
+        return MemberResponseDto.of(member, laboratory, coffeeChat, labReview);
     }
 }

@@ -433,4 +433,103 @@ public interface MemberApiSpecification {
     ResponseEntity<ResponseDto<Long>> deleteMember(
             @AuthenticationPrincipal Member member
     );
+
+    @Operation(
+            summary = "내 정보 조회",
+            description = """
+                    인증된 유저 본인의 정보를 조회합니다.
+                    userType이 RESEARCHER인 경우에만 연동된 연구실, 커피챗, 연구실 리뷰 정보가 함께 채워지며,
+                    그 외에는 laboratory/coffeeChat/labReview가 모두 null로 내려갑니다.
+                    """
+    )
+    @ApiResponses({
+            @ApiResponse(
+                    responseCode = "200",
+                    description = "내 정보 조회 성공",
+                    content = @Content(
+                            mediaType = "application/json",
+                            schema = @Schema(implementation = ResponseDto.class),
+                            examples = {
+                                    @ExampleObject(
+                                            name = "연구자",
+                                            value = """
+                                                    {
+                                                      "data": {
+                                                        "id": 1,
+                                                        "studentNumber": "20240001",
+                                                        "nickName": "홍길동",
+                                                        "department": "COMPUTER_ENGINEERING",
+                                                        "email": "student@example.com",
+                                                        "lastLoginAt": "2026-08-18T12:00:00",
+                                                        "isNew": false,
+                                                        "userType": "RESEARCHER",
+                                                        "laboratory": {
+                                                          "id": 1,
+                                                          "labName": "소프트웨어공학 연구실"
+                                                        },
+                                                        "coffeeChat": {
+                                                          "id": 1,
+                                                          "laboratoryId": 1,
+                                                          "laboratoryName": "소프트웨어공학 연구실",
+                                                          "researcherId": 1,
+                                                          "contactType": "KAKAO_OPEN_CHAT",
+                                                          "contactValue": "https://open.kakao.com/o/example"
+                                                        },
+                                                        "labReview": {
+                                                          "id": 1,
+                                                          "laboratoryId": 1,
+                                                          "coreTime": "있음",
+                                                          "weeklyMeeting": "주 1회",
+                                                          "doings": ["논문 리딩", "실험/코딩"]
+                                                        }
+                                                      },
+                                                      "code": null,
+                                                      "message": "내 정보 조회 성공"
+                                                    }
+                                                    """
+                                    ),
+                                    @ExampleObject(
+                                            name = "연구자가 아닌 경우",
+                                            value = """
+                                                    {
+                                                      "data": {
+                                                        "id": 2,
+                                                        "studentNumber": "20240002",
+                                                        "nickName": "이순신",
+                                                        "department": "COMPUTER_ENGINEERING",
+                                                        "email": "student2@example.com",
+                                                        "lastLoginAt": "2026-08-18T12:00:00",
+                                                        "isNew": false,
+                                                        "userType": "FINDER",
+                                                        "laboratory": null,
+                                                        "coffeeChat": null,
+                                                        "labReview": null
+                                                      },
+                                                      "code": null,
+                                                      "message": "내 정보 조회 성공"
+                                                    }
+                                                    """
+                                    )
+                            }
+                    )
+            ),
+            @ApiResponse(
+                    responseCode = "401",
+                    description = "인증 토큰 누락, 만료 또는 유효하지 않은 토큰",
+                    content = @Content(
+                            mediaType = "application/json",
+                            schema = @Schema(implementation = ResponseDto.class),
+                            examples = @ExampleObject(value = """
+                                    {
+                                      "data": null,
+                                      "code": "TOKEN_INVALID",
+                                      "message": "유효하지 않은 토큰입니다."
+                                    }
+                                    """)
+                    )
+            )
+    })
+    ResponseEntity<ResponseDto<MemberResponseDto>> getMyInfo(
+            @AuthenticationPrincipal Member member
+    );
 }

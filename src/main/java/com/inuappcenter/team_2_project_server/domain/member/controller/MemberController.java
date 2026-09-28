@@ -126,4 +126,16 @@ public class MemberController implements MemberApiSpecification {
         log.info(member.getId() + " 유저가 삭제되었습니다.");
         return ResponseEntity.ok(ResponseDto.of(member.getId(), "유저 삭제 성공"));
     }
+
+    /**
+     * 내 정보 조회 컨트롤러
+     */
+    @Override
+    @GetMapping("/me")
+    public ResponseEntity<ResponseDto<MemberResponseDto>> getMyInfo(
+            @AuthenticationPrincipal Member member
+    ) {
+        MemberResponseDto response = memberService.getMyInfo(member.getId());
+        return ResponseEntity.ok(ResponseDto.of(response, "내 정보 조회 성공"));
+    }
 }

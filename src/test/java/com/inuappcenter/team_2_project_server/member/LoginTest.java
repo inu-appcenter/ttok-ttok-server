@@ -6,8 +6,12 @@ import com.inuappcenter.team_2_project_server.domain.member.dto.response.LoginRe
 import com.inuappcenter.team_2_project_server.domain.member.entity.Member;
 import com.inuappcenter.team_2_project_server.domain.member.repository.MemberRepository;
 import com.inuappcenter.team_2_project_server.domain.member.repository.SchoolAuthRepository;
+import com.inuappcenter.team_2_project_server.domain.laboratory.service.CoffeeChatService;
+import com.inuappcenter.team_2_project_server.domain.laboratory.service.LabReviewService;
+import com.inuappcenter.team_2_project_server.domain.laboratory.service.LaboratoryService;
 import com.inuappcenter.team_2_project_server.domain.member.service.JwtTokenProvider;
 import com.inuappcenter.team_2_project_server.domain.member.service.MemberService;
+import com.inuappcenter.team_2_project_server.domain.member.service.ResearcherService;
 import com.inuappcenter.team_2_project_server.global.error.ex.ErrorCode;
 import com.inuappcenter.team_2_project_server.global.error.ex.MyException;
 import org.junit.jupiter.api.BeforeEach;
@@ -34,7 +38,15 @@ class LoginTest {
         schoolAuthRepository = mock(SchoolAuthRepository.class);
         memberRepository = mock(MemberRepository.class);
         jwtTokenProvider = mock(JwtTokenProvider.class);
-        memberService = new MemberService(schoolAuthRepository, memberRepository, jwtTokenProvider);
+        memberService = new MemberService(
+                schoolAuthRepository,
+                memberRepository,
+                jwtTokenProvider,
+                mock(ResearcherService.class),
+                mock(LaboratoryService.class),
+                mock(CoffeeChatService.class),
+                mock(LabReviewService.class)
+        );
     }
 
     @Test
