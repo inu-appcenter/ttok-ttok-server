@@ -54,10 +54,10 @@ public class SecurityConfig {
                         // 인증이 필요없는 API
                         .requestMatchers(HttpMethod.GET, "/api/laboratory/**").permitAll()
 
-
                         // 관리자 전용
                         .requestMatchers(HttpMethod.GET, "/api/member", "/api/member/**").hasRole("ADMIN")
-                        .requestMatchers(HttpMethod.POST, "/api/laboratory/import").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.POST, "/api/laboratory/import", "/api/laboratory/research-projects/sync").hasRole("ADMIN")
+                        
                         // 오류 제보: 생성(POST)은 로그인 유저 누구나, 조회/삭제는 관리자만
                         .requestMatchers(HttpMethod.GET, "/api/bug-report", "/api/bug-report/**").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.DELETE, "/api/bug-report/**").hasRole("ADMIN")
