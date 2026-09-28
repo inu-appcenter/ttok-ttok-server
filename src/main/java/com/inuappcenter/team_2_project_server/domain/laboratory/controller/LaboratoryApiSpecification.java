@@ -10,17 +10,12 @@ import com.inuappcenter.team_2_project_server.global.dto.PageResponseDto;
 import com.inuappcenter.team_2_project_server.global.dto.ResponseDto;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
-import io.swagger.v3.oas.annotations.enums.ParameterIn;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.ExampleObject;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import org.springdoc.core.annotations.ParameterObject;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
-import org.springframework.data.web.PageableDefault;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -264,8 +259,7 @@ public interface LaboratoryApiSpecification {
             summary = "연구실 전체 조회",
             description = """
                     등록된 연구실 목록을 페이지 단위로 조회합니다.
-                    page(0-based), size, sort(예: `labName,asc` / `labName,desc`) 쿼리 파라미터를 사용합니다.
-                    기본값은 size=20, labName 오름차순입니다.
+                    page(0-based) 쿼리 파라미터만 사용하며, 한 페이지당 20건으로 고정이고 labName 오름차순으로 정렬됩니다.
                     """
     )
     @ApiResponse(
@@ -319,12 +313,9 @@ public interface LaboratoryApiSpecification {
                             """)
             )
     )
-    @Parameter(name = "page", in = ParameterIn.QUERY, description = "0부터 시작하는 페이지 번호", example = "0")
-    @Parameter(name = "size", in = ParameterIn.QUERY, description = "한 페이지에 담을 개수 (기본값 20)", example = "20")
-    @Parameter(name = "sort", in = ParameterIn.QUERY, description = "정렬 조건. `필드명,asc|desc` 형식 (기본값 labName,asc)", example = "labName,asc")
     ResponseEntity<ResponseDto<PageResponseDto<LaboratoryResponseDto>>> getAllLaboratory(
-            @ParameterObject
-            @PageableDefault(size = 20, sort = "labName", direction = Sort.Direction.ASC) Pageable pageable
+            @Parameter(description = "0부터 시작하는 페이지 번호", example = "0")
+            @RequestParam(defaultValue = "0") int page
     );
 
     @Operation(
@@ -500,7 +491,7 @@ public interface LaboratoryApiSpecification {
             summary = "연구실 검색",
             description = """
                     연구실명 또는 교수명에 검색어가 포함된 연구실을 페이지 단위로 조회합니다.
-                    page(0-based), size, sort 쿼리 파라미터를 사용하며 기본값은 size=20 입니다.
+                    page(0-based) 쿼리 파라미터만 사용하며, 한 페이지당 20건으로 고정입니다.
                     """
     )
     @ApiResponses({
@@ -571,14 +562,11 @@ public interface LaboratoryApiSpecification {
                     )
             )
     })
-    @Parameter(name = "page", in = ParameterIn.QUERY, description = "0부터 시작하는 페이지 번호", example = "0")
-    @Parameter(name = "size", in = ParameterIn.QUERY, description = "한 페이지에 담을 개수 (기본값 20)", example = "20")
-    @Parameter(name = "sort", in = ParameterIn.QUERY, description = "정렬 조건. `필드명,asc|desc` 형식 (예: labName,desc)", example = "labName,asc")
     ResponseEntity<ResponseDto<PageResponseDto<LaboratoryResponseDto>>> searchLaboratory(
             @Parameter(description = "연구실명 또는 교수명 검색어", required = true, example = "홍길동")
             @RequestParam String keyword,
-            @ParameterObject
-            @PageableDefault(size = 20) Pageable pageable
+            @Parameter(description = "0부터 시작하는 페이지 번호", example = "0")
+            @RequestParam(defaultValue = "0") int page
     );
 
     @Operation(

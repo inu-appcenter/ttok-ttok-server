@@ -13,12 +13,10 @@ import com.inuappcenter.team_2_project_server.global.dto.PageResponseDto;
 import com.inuappcenter.team_2_project_server.global.dto.ResponseDto;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.springdoc.core.annotations.ParameterObject;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
-import org.springframework.data.web.PageableDefault;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -68,13 +66,13 @@ public class LaboratoryController implements LaboratoryApiSpecification {
 
     @GetMapping
     public ResponseEntity<ResponseDto<PageResponseDto<LaboratoryResponseDto>>> getAllLaboratory(
-            @ParameterObject
-            @PageableDefault(size = 20, sort = "labName", direction = Sort.Direction.ASC) Pageable pageable
+            @RequestParam(defaultValue = "0") int page
     ) {
-        Page<LaboratoryResponseDto> page = laboratoryService.getAllLab(pageable);
+        Pageable pageable = PageRequest.of(page, 20, Sort.by(Sort.Direction.ASC, "labName"));
+        Page<LaboratoryResponseDto> result = laboratoryService.getAllLab(pageable);
 
         return ResponseEntity.ok(
-                ResponseDto.of(PageResponseDto.from(page), "전체 연구실 조회 성공")
+                ResponseDto.of(PageResponseDto.from(result), "전체 연구실 조회 성공")
         );
     }
 
@@ -105,11 +103,12 @@ public class LaboratoryController implements LaboratoryApiSpecification {
     @GetMapping("/search")
     public ResponseEntity<ResponseDto<PageResponseDto<LaboratoryResponseDto>>> searchLaboratory(
             @RequestParam String keyword,
-            @ParameterObject @PageableDefault(size = 20) Pageable pageable
+            @RequestParam(defaultValue = "0") int page
     ) {
-        Page<LaboratoryResponseDto> page = laboratoryService.searchLabs(keyword, pageable);
+        Pageable pageable = PageRequest.of(page, 20);
+        Page<LaboratoryResponseDto> result = laboratoryService.searchLabs(keyword, pageable);
         return ResponseEntity.ok(
-                ResponseDto.of(PageResponseDto.from(page), "연구실 검색 성공")
+                ResponseDto.of(PageResponseDto.from(result), "연구실 검색 성공")
         );
     }
 
