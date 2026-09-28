@@ -1,0 +1,62 @@
+package com.inuappcenter.team_2_project_server.global.config;
+
+import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.dataformat.xml.XmlMapper;
+import io.netty.channel.ChannelOption;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
+import org.springframework.http.client.reactive.ReactorClientHttpConnector;
+import org.springframework.web.reactive.function.client.WebClient;
+import reactor.netty.http.client.HttpClient;
+
+import java.time.Duration;
+
+@Configuration
+public class WebClientConfig {
+
+    /**
+     * 연구과제 API
+     * NTIS가 응답하지 않을 때 스레드가 무한 대기하지 않도록 연결/응답 타임아웃을 명시적으로 건다
+     * (연구실 231개를 순차로 조회하는 배치/수동 동기화 특성상, 하나만 걸려도 전체가 멈추면 안 된다)
+     */
+    @Bean
+    public WebClient ntisWebClient(
+            @Value("${ntis.base-url}") String baseUrl
+    ) {
+        HttpClient httpClient = HttpClient.create()
+                .option(ChannelOption.CONNECT_TIMEOUT_MILLIS, 5000)
+                .responseTimeout(Duration.ofSeconds(15));
+
+        return WebClient.builder()
+                .baseUrl(baseUrl)
+                .clientConnector(new ReactorClientHttpConnector(httpClient))
+                .build();
+    }
+
+    // 응답 XML을 문자열로 받아 직접 파싱할 때 쓴다. WebClient의 자동 XML 디코딩에 기대지 않고
+    // 우리가 정의한 필드(대외용 제공 가능 항목)만 매핑하며, 나머지 필드는 무시한다
+    @Bean
+    public XmlMapper ntisXmlMapper() {
+        XmlMapper xmlMapper = new XmlMapper();
+        xmlMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+        return xmlMapper;
+    }
+
+    /**
+     * AI 챗봇 API
+     */
+    @Bean
+    public WebClient factChatWebClient(
+            @Value("${ai.base-url}") String baseUrl,
+            @Value("${ai.api-key}") String apiKey
+    ) {
+        return WebClient.builder()
+                .baseUrl(baseUrl)
+                .defaultHeader(HttpHeaders.AUTHORIZATION, "Bearer " + apiKey)
+                .defaultHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
+                .build();
+    }
+}

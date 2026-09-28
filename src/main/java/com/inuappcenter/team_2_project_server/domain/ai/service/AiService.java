@@ -2,6 +2,7 @@ package com.inuappcenter.team_2_project_server.domain.ai.service;
 
 import com.inuappcenter.team_2_project_server.domain.ai.dto.AiRequestDto;
 import com.inuappcenter.team_2_project_server.domain.ai.dto.AiResponseDto;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
@@ -16,7 +17,7 @@ public class AiService {
     private final String emailEditorChatBotId;
 
     public AiService(
-            WebClient aiWebClient,
+            @Qualifier("factChatWebClient") WebClient aiWebClient,
             @Value("${ai.research-lab-chatbot-id}") String researchLabChatBotId,
             @Value("${ai.email-editor-chatbot-id}") String emailEditorChatBotId
     ) {

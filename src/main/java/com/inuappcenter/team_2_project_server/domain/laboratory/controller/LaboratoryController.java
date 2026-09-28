@@ -4,19 +4,19 @@ import com.inuappcenter.team_2_project_server.domain.laboratory.dto.request.Labo
 import com.inuappcenter.team_2_project_server.domain.laboratory.dto.request.LaboratoryUpdateRequestDto;
 import com.inuappcenter.team_2_project_server.domain.laboratory.dto.response.LaboratoryResponseDto;
 import com.inuappcenter.team_2_project_server.domain.laboratory.dto.response.PublicationResponseDto;
+import com.inuappcenter.team_2_project_server.domain.laboratory.dto.response.ResearchProjectResponseDto;
 import com.inuappcenter.team_2_project_server.domain.laboratory.service.LaboratoryExcelImportService;
 import com.inuappcenter.team_2_project_server.domain.laboratory.service.LaboratoryService;
+import com.inuappcenter.team_2_project_server.domain.laboratory.service.ResearchProjectSyncService;
 import com.inuappcenter.team_2_project_server.domain.member.entity.Member;
 import com.inuappcenter.team_2_project_server.global.dto.PageResponseDto;
 import com.inuappcenter.team_2_project_server.global.dto.ResponseDto;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.springdoc.core.annotations.ParameterObject;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
-import org.springframework.data.web.PageableDefault;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -29,6 +29,7 @@ import org.springframework.web.multipart.MultipartFile;
 public class LaboratoryController implements LaboratoryApiSpecification {
     private final LaboratoryExcelImportService laboratoryExcelImportService;
     private final LaboratoryService laboratoryService;
+    private final ResearchProjectSyncService researchProjectSyncService;
 
     @Override
     @PostMapping(value = "/import", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
@@ -65,13 +66,13 @@ public class LaboratoryController implements LaboratoryApiSpecification {
 
     @GetMapping
     public ResponseEntity<ResponseDto<PageResponseDto<LaboratoryResponseDto>>> getAllLaboratory(
-            @ParameterObject
-            @PageableDefault(size = 20, sort = "labName", direction = Sort.Direction.ASC) Pageable pageable
+            @RequestParam(defaultValue = "0") int page
     ) {
-        Page<LaboratoryResponseDto> page = laboratoryService.getAllLab(pageable);
+        Pageable pageable = PageRequest.of(page, 20, Sort.by(Sort.Direction.ASC, "labName"));
+        Page<LaboratoryResponseDto> result = laboratoryService.getAllLab(pageable);
 
         return ResponseEntity.ok(
-                ResponseDto.of(PageResponseDto.from(page), "전체 연구실 조회 성공")
+                ResponseDto.of(PageResponseDto.from(result), "전체 연구실 조회 성공")
         );
     }
 
@@ -102,11 +103,12 @@ public class LaboratoryController implements LaboratoryApiSpecification {
     @GetMapping("/search")
     public ResponseEntity<ResponseDto<PageResponseDto<LaboratoryResponseDto>>> searchLaboratory(
             @RequestParam String keyword,
-            @ParameterObject @PageableDefault(size = 20) Pageable pageable
+            @RequestParam(defaultValue = "0") int page
     ) {
-        Page<LaboratoryResponseDto> page = laboratoryService.searchLabs(keyword, pageable);
+        Pageable pageable = PageRequest.of(page, 20);
+        Page<LaboratoryResponseDto> result = laboratoryService.searchLabs(keyword, pageable);
         return ResponseEntity.ok(
-                ResponseDto.of(PageResponseDto.from(page), "연구실 검색 성공")
+                ResponseDto.of(PageResponseDto.from(result), "연구실 검색 성공")
         );
     }
 
@@ -133,6 +135,36 @@ public class LaboratoryController implements LaboratoryApiSpecification {
         Page<PublicationResponseDto> result = laboratoryService.getLabPublications(laboratoryId, pageable);
         return ResponseEntity.ok(
                 ResponseDto.of(PageResponseDto.from(result), "연구실 논문 목록 조회 성공")
+        );
+    }
+
+    /**
+     * 연구과제 조회 컨트롤러
+     */
+    @Override
+    @GetMapping("/{laboratoryId}/research-projects")
+    public ResponseEntity<ResponseDto<PageResponseDto<ResearchProjectResponseDto>>> getResearchProjects(
+            @PathVariable Long laboratoryId,
+            @RequestParam(defaultValue = "0") int page
+    ) {
+        Pageable pageable = PageRequest.of(
+                page, 5, Sort.by(Sort.Direction.DESC, "ongoing").and(Sort.by(Sort.Direction.DESC, "projectYear"))
+        );
+        Page<ResearchProjectResponseDto> result = laboratoryService.getLabResearchProjects(laboratoryId, pageable);
+        return ResponseEntity.ok(
+                ResponseDto.of(PageResponseDto.from(result), "연구실 연구과제 목록 조회 성공")
+        );
+    }
+
+    /**
+     * 전체 연구실 연구과제 수동 동기화 컨트롤러 (관리자 전용, 매일 새벽 배치와 별개로 지금 바로 실행)
+     */
+    @Override
+    @PostMapping("/research-projects/sync")
+    public ResponseEntity<ResponseDto<Void>> syncAllResearchProjects() {
+        researchProjectSyncService.syncAll();
+        return ResponseEntity.ok(
+                ResponseDto.of(null, "연구과제 전체 동기화 완료")
         );
     }
 }

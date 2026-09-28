@@ -22,3 +22,7 @@ ai:
   api-key: test-ai-api-key
   research-lab-chatbot-id: "0"
   email-editor-chatbot-id: "0"
+
+ntis:
+  base-url: http://localhost
+  api-key: test-ntis-api-key

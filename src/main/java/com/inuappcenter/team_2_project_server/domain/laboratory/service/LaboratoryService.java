@@ -5,9 +5,11 @@ import com.inuappcenter.team_2_project_server.domain.laboratory.dto.request.Labo
 import com.inuappcenter.team_2_project_server.domain.laboratory.dto.request.LaboratoryUpdateRequestDto;
 import com.inuappcenter.team_2_project_server.domain.laboratory.dto.response.LaboratoryResponseDto;
 import com.inuappcenter.team_2_project_server.domain.laboratory.dto.response.PublicationResponseDto;
+import com.inuappcenter.team_2_project_server.domain.laboratory.dto.response.ResearchProjectResponseDto;
 import com.inuappcenter.team_2_project_server.domain.laboratory.entity.Laboratory;
 import com.inuappcenter.team_2_project_server.domain.laboratory.repository.LaboratoryRepository;
 import com.inuappcenter.team_2_project_server.domain.laboratory.repository.PublicationRepository;
+import com.inuappcenter.team_2_project_server.domain.laboratory.repository.ResearchProjectRepository;
 import com.inuappcenter.team_2_project_server.domain.member.entity.Member;
 import com.inuappcenter.team_2_project_server.domain.member.entity.Professor;
 import com.inuappcenter.team_2_project_server.domain.member.service.ProfessorService;
@@ -32,6 +34,8 @@ public class LaboratoryService {
     private final LaboratoryRepository laboratoryRepository;
     private final ProfessorService professorService;
     private final PublicationRepository publicationRepository;
+    private final ResearchProjectRepository researchProjectRepository;
+    private final ResearchProjectSyncService researchProjectSyncService;
     private final ResearcherService researcherService;
 
     /**
@@ -193,5 +197,14 @@ public class LaboratoryService {
 
         return publicationRepository.findByLaboratory(laboratory, pageable)
                 .map(PublicationResponseDto::from);
+    }
+
+    @Transactional(readOnly = true)
+    public Page<ResearchProjectResponseDto> getLabResearchProjects(Long laboratoryId, Pageable pageable) {
+        Laboratory laboratory = laboratoryRepository.findById(laboratoryId)
+                .orElseThrow(() -> new MyException(ErrorCode.LABORATORY_NOT_FOUND));
+
+        return researchProjectRepository.findByLaboratory(laboratory, pageable)
+                .map(ResearchProjectResponseDto::from);
     }
 }
