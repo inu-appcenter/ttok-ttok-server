@@ -228,4 +228,13 @@ public class MemberService {
 
         return MemberResponseDto.of(member, laboratory, coffeeChat, labReview);
     }
+
+    /**
+     * 내부 호출용 엔티티 조회 메서드
+     */
+    @Transactional(readOnly = true)
+    public Member getMemberEntity(Long memberId) {
+        return memberRepository.findById(memberId)
+                .orElseThrow(() -> new MyException(ErrorCode.MEMBER_NOT_FOUND));
+    }
 }

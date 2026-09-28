@@ -207,4 +207,13 @@ public class LaboratoryService {
         return researchProjectRepository.findByLaboratory(laboratory, pageable)
                 .map(ResearchProjectResponseDto::from);
     }
+
+    /**
+     * 내부 호출용 엔티티 조회 메서드
+     */
+    @Transactional(readOnly = true)
+    public Laboratory getLaboratoryEntity(Long laboratoryId) {
+        return laboratoryRepository.findById(laboratoryId)
+                .orElseThrow(() -> new MyException(ErrorCode.LABORATORY_NOT_FOUND));
+    }
 }
