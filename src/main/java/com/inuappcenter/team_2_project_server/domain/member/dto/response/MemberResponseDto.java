@@ -1,6 +1,9 @@
 package com.inuappcenter.team_2_project_server.domain.member.dto.response;
 
 import com.inuappcenter.team_2_project_server.domain.department.Department;
+import com.inuappcenter.team_2_project_server.domain.laboratory.dto.response.CoffeeChatResponseDto;
+import com.inuappcenter.team_2_project_server.domain.laboratory.dto.response.LabReviewResponseDto;
+import com.inuappcenter.team_2_project_server.domain.laboratory.dto.response.LaboratoryResponseDto;
 import com.inuappcenter.team_2_project_server.domain.member.entity.Member;
 import com.inuappcenter.team_2_project_server.domain.member.enums.UserType;
 
@@ -14,11 +17,24 @@ public record MemberResponseDto(
         String email,
         LocalDateTime lastLoginAt,
         boolean isNew,
-        UserType userType
+        UserType userType,
+        CoffeeChatResponseDto coffeeChat,
+        LaboratoryResponseDto laboratory,
+        LabReviewResponseDto labReview
+
 ) {
     // 엔티티는 Dto로 바꾸는 정적 팩토리 메서드
     public static MemberResponseDto from(
             Member member
+    ) {
+        return of(member, null, null, null);
+    }
+
+    public static MemberResponseDto of(
+            Member member,
+            LaboratoryResponseDto laboratory,
+            CoffeeChatResponseDto coffeeChat,
+            LabReviewResponseDto labReview
     ) {
         return new MemberResponseDto(
                 member.getId(),
@@ -28,7 +44,10 @@ public record MemberResponseDto(
                 member.getEmail(),
                 member.getLastLoginAt(),
                 member.isNew(),
-                member.getUserType()
+                member.getUserType(),
+                coffeeChat,
+                laboratory,
+                labReview
         );
     }
 }
