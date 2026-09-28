@@ -25,4 +25,4 @@ ai:
 
 ntis:
   base-url: http://localhost
-  apprv-key: test-ntis-apprv-key
+  api-key: test-ntis-api-key

@@ -16,6 +16,7 @@ import org.junit.jupiter.api.Test;
 import java.util.List;
 import java.util.Optional;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.*;
@@ -95,6 +96,34 @@ class ResearchProjectSyncServiceTest {
         researchProjectSyncService.syncOne(laboratory);
 
         verify(researchProjectRepository).save(argThatOngoing(false));
+    }
+
+    @Test
+    void syncOne_strips_ntis_search_word_highlight_markup_from_manager_name() {
+        Laboratory laboratory = laboratory();
+        NtisProjectSearchResponse.Hit hitWithHighlight = new NtisProjectSearchResponse.Hit(
+                "1711041912",
+                new NtisProjectSearchResponse.ProjectTitle("국문 과제명", "English Title"),
+                new NtisProjectSearchResponse.NamedEntity("<span class=\"search_word\">홍길동</span>"),
+                new NtisProjectSearchResponse.TextBlock("연구내용 전문", null),
+                new NtisProjectSearchResponse.Keyword("키워드1,키워드2", "keyword1,keyword2"),
+                new NtisProjectSearchResponse.NamedEntity("<span class=\"search_word\">인천대학교</span>산학협력단"),
+                new NtisProjectSearchResponse.NamedEntity("예산사업명"),
+                new NtisProjectSearchResponse.NamedEntity("과학기술정보통신부"),
+                "2024",
+                new NtisProjectSearchResponse.ProjectPeriod("20240101", "20241231", "2024-01-01 00:00:00.0", "2099-12-31 00:00:00.0"),
+                "100000000",
+                "150000000"
+        );
+        given(ntisClient.searchByManagerName(eq("홍길동"), anyInt(), anyInt())).willReturn(List.of(hitWithHighlight));
+        given(researchProjectRepository.findByProjectNumber("1711041912")).willReturn(Optional.empty());
+
+        researchProjectSyncService.syncOne(laboratory);
+
+        org.mockito.ArgumentCaptor<ResearchProject> captor = org.mockito.ArgumentCaptor.forClass(ResearchProject.class);
+        verify(researchProjectRepository).save(captor.capture());
+        assertThat(captor.getValue().getManagerName()).isEqualTo("홍길동");
+        assertThat(captor.getValue().getResearchAgencyName()).isEqualTo("인천대학교산학협력단");
     }
 
     private ResearchProject argThatOngoing(boolean expected) {
