@@ -1,6 +1,7 @@
 package com.inuappcenter.team_2_project_server.domain.laboratory.repository;
 
 import com.inuappcenter.team_2_project_server.domain.department.Department;
+import com.inuappcenter.team_2_project_server.domain.laboratory.dto.LabCollegeDeptCountRow;
 import com.inuappcenter.team_2_project_server.domain.laboratory.entity.Laboratory;
 import com.inuappcenter.team_2_project_server.domain.member.entity.Professor;
 import org.springframework.data.domain.Page;
@@ -46,4 +47,13 @@ public interface LaboratoryRepository extends JpaRepository<Laboratory, Long> {
     @Override
     @EntityGraph(attributePaths = "professor")
     Page<Laboratory> findAll(Pageable pageable);
+
+    @Query("""
+            select new com.inuappcenter.team_2_project_server.domain.laboratory.dto.LabCollegeDeptCountRow(
+                l.college, l.department, count(l)
+            )
+            from Laboratory l
+            group by l.college, l.department
+            """)
+    List<LabCollegeDeptCountRow> countGroupByCollegeAndDepartment();
 }

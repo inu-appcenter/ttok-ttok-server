@@ -1,11 +1,10 @@
 package com.inuappcenter.team_2_project_server.domain.laboratory.service;
 
+import com.inuappcenter.team_2_project_server.domain.laboratory.dto.LabCollegeDeptCountRow;
 import com.inuappcenter.team_2_project_server.domain.laboratory.dto.request.LaboratoryCapacityUpdateRequestDto;
 import com.inuappcenter.team_2_project_server.domain.laboratory.dto.request.LaboratoryCreateRequestDto;
 import com.inuappcenter.team_2_project_server.domain.laboratory.dto.request.LaboratoryUpdateRequestDto;
-import com.inuappcenter.team_2_project_server.domain.laboratory.dto.response.LaboratoryResponseDto;
-import com.inuappcenter.team_2_project_server.domain.laboratory.dto.response.PublicationResponseDto;
-import com.inuappcenter.team_2_project_server.domain.laboratory.dto.response.ResearchProjectResponseDto;
+import com.inuappcenter.team_2_project_server.domain.laboratory.dto.response.*;
 import com.inuappcenter.team_2_project_server.domain.laboratory.entity.Laboratory;
 import com.inuappcenter.team_2_project_server.domain.laboratory.repository.LaboratoryRepository;
 import com.inuappcenter.team_2_project_server.domain.laboratory.repository.PublicationRepository;
@@ -23,6 +22,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -215,5 +215,26 @@ public class LaboratoryService {
     public Laboratory getLaboratoryEntity(Long laboratoryId) {
         return laboratoryRepository.findById(laboratoryId)
                 .orElseThrow(() -> new MyException(ErrorCode.LABORATORY_NOT_FOUND));
+    }
+
+    /**
+     * 단과대/학과별로 연구실 갯수 조회
+     */
+    @Transactional(readOnly = true)
+    public List<LabCountByCollegeResponseDto> getLabByCollegeDeptCount() {
+        // (단과대, 학과, 개수) row를 가져옴
+        List<LabCollegeDeptCountRow> rows = laboratoryRepository.countGroupByCollegeAndDepartment();
+
+        return rows.stream()
+                .collect(Collectors.groupingBy(LabCollegeDeptCountRow::college)) // 각 row를 college를 기준으로 묶음
+                .entrySet().stream() // 위에서 만든 Map을 다시 stream으로
+                .map(entry -> LabCountByCollegeResponseDto.of(
+                        entry.getKey(), // college키
+                        entry.getValue().stream() // department값
+                                .sorted(Comparator.comparing(LabCollegeDeptCountRow::count).reversed()) // 학과별로 갯수
+                                .map(LabCountByDeptResponseDto::from)
+                                .toList()
+                ))
+                .toList();
     }
 }
