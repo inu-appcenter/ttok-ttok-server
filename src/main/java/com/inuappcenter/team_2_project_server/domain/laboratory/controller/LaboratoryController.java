@@ -2,6 +2,7 @@ package com.inuappcenter.team_2_project_server.domain.laboratory.controller;
 
 import com.inuappcenter.team_2_project_server.domain.laboratory.dto.request.LaboratoryCreateRequestDto;
 import com.inuappcenter.team_2_project_server.domain.laboratory.dto.request.LaboratoryUpdateRequestDto;
+import com.inuappcenter.team_2_project_server.domain.laboratory.dto.response.LabCountByCollegeResponseDto;
 import com.inuappcenter.team_2_project_server.domain.laboratory.dto.response.LaboratoryResponseDto;
 import com.inuappcenter.team_2_project_server.domain.laboratory.dto.response.PublicationResponseDto;
 import com.inuappcenter.team_2_project_server.domain.laboratory.dto.response.ResearchProjectResponseDto;
@@ -22,6 +23,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
+
+import java.util.List;
 
 @RestController
 @RequiredArgsConstructor
@@ -165,6 +168,16 @@ public class LaboratoryController implements LaboratoryApiSpecification {
         researchProjectSyncService.syncAll();
         return ResponseEntity.ok(
                 ResponseDto.of(null, "연구과제 전체 동기화 완료")
+        );
+    }
+
+    @Override
+    @GetMapping("/college-department/count")
+    public ResponseEntity<ResponseDto<List<LabCountByCollegeResponseDto>>> getLabCountByCollegeDept() {
+        List<LabCountByCollegeResponseDto> responses = laboratoryService.getLabByCollegeDeptCount();
+
+        return ResponseEntity.ok(
+                ResponseDto.of(responses, "전체 단과대/학과별 연구실 갯수 조회 성공")
         );
     }
 }
