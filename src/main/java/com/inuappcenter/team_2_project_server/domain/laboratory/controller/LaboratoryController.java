@@ -172,7 +172,7 @@ public class LaboratoryController implements LaboratoryApiSpecification {
     }
 
     @Override
-    @GetMapping("/college/department/count")
+    @GetMapping("/college-department/count")
     public ResponseEntity<ResponseDto<List<LabCountByCollegeResponseDto>>> getLabCountByCollegeDept() {
         List<LabCountByCollegeResponseDto> responses = laboratoryService.getLabByCollegeDeptCount();
 
