@@ -321,7 +321,10 @@ public interface MemberApiSpecification {
             @PathVariable Long memberId
     );
 
-    @Operation(summary = "유저 프로필 수정", description = "인증된 유저의 닉네임, 학과, 이메일을 수정합니다.")
+    @Operation(
+            summary = "내 프로필 수정",
+            description = "인증된 유저 본인의 닉네임, 학과, 이메일을 수정합니다. (관리자가 다른 유저를 수정하는 API가 아니라, 로그인한 본인 계정에만 적용됩니다)"
+    )
     @ApiResponses({
             @ApiResponse(
                     responseCode = "200",
@@ -382,11 +385,17 @@ public interface MemberApiSpecification {
             @RequestBody MemberUpdateRequestDto request
     );
 
-    @Operation(summary = "유저 삭제", description = "인증된 유저 계정을 삭제합니다.")
+    @Operation(
+            summary = "회원 탈퇴",
+            description = """
+                    인증된 유저 본인 계정을 탈퇴(삭제)합니다. 관리자가 다른 유저를 삭제하는 API가 아니라,
+                    로그인한 본인 계정만 탈퇴할 수 있습니다. 응답 data는 탈퇴한 유저의 ID입니다.
+                    """
+    )
     @ApiResponses({
             @ApiResponse(
                     responseCode = "200",
-                    description = "유저 삭제 성공",
+                    description = "회원 탈퇴 성공",
                     content = @Content(
                             mediaType = "application/json",
                             schema = @Schema(implementation = ResponseDto.class),
