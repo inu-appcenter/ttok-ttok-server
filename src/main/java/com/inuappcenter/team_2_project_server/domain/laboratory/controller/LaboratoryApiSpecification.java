@@ -2,6 +2,7 @@ package com.inuappcenter.team_2_project_server.domain.laboratory.controller;
 
 import com.inuappcenter.team_2_project_server.domain.laboratory.dto.request.LaboratoryCreateRequestDto;
 import com.inuappcenter.team_2_project_server.domain.laboratory.dto.request.LaboratoryUpdateRequestDto;
+import com.inuappcenter.team_2_project_server.domain.laboratory.dto.response.LabCountByCollegeResponseDto;
 import com.inuappcenter.team_2_project_server.domain.laboratory.dto.response.LaboratoryResponseDto;
 import com.inuappcenter.team_2_project_server.domain.laboratory.dto.response.PublicationResponseDto;
 import com.inuappcenter.team_2_project_server.domain.laboratory.dto.response.ResearchProjectResponseDto;
@@ -24,6 +25,8 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.multipart.MultipartFile;
+
+import java.util.List;
 
 @Tag(name = "연구실", description = "연구실 관리 및 편람 엑셀 동기화 API")
 public interface LaboratoryApiSpecification {
@@ -817,4 +820,56 @@ public interface LaboratoryApiSpecification {
             )
     )
     ResponseEntity<ResponseDto<Void>> syncAllResearchProjects();
+
+    @Operation(
+            summary = "단과대/학과별 연구실 개수 조회",
+            description = """
+                    연구실이 하나라도 있는 단과대·학과만 대상으로, 단과대별 → 학과별 연구실 개수를 집계해서 내려줍니다.
+                    연구실이 없는 단과대 또는 학과는 응답에 포함되지 않으며, 각 단과대 안의 학과는 연구실 개수 내림차순으로 정렬됩니다.
+                    """
+    )
+    @ApiResponse(
+            responseCode = "200",
+            description = "단과대/학과별 연구실 개수 조회 성공",
+            content = @Content(
+                    mediaType = "application/json",
+                    schema = @Schema(implementation = ResponseDto.class),
+                    examples = @ExampleObject(value = """
+                            {
+                              "data": [
+                                {
+                                  "college": "COLLEGE_OF_ENGINEERING",
+                                  "collegeName": "공과대학",
+                                  "departments": [
+                                    {
+                                      "department": "BIO_ROBOTICS_ENGINEERING",
+                                      "departmentName": "바이오 로봇시스템공학과",
+                                      "count": 8
+                                    },
+                                    {
+                                      "department": "ELECTRICAL_ENGINEERING",
+                                      "departmentName": "전기공학과",
+                                      "count": 6
+                                    }
+                                  ]
+                                },
+                                {
+                                  "college": "COLLEGE_OF_NATURAL_SCIENCES",
+                                  "collegeName": "자연과학대학",
+                                  "departments": [
+                                    {
+                                      "department": "MARINE",
+                                      "departmentName": "해양학과",
+                                      "count": 8
+                                    }
+                                  ]
+                                }
+                              ],
+                              "code": null,
+                              "message": "전체 단과대/학과별 연구실 갯수 조회 성공"
+                            }
+                            """)
+            )
+    )
+    ResponseEntity<ResponseDto<List<LabCountByCollegeResponseDto>>> getLabCountByCollegeDept();
 }
