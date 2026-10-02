@@ -1,5 +1,6 @@
 package com.inuappcenter.team_2_project_server.domain.laboratory.repository;
 
+import com.inuappcenter.team_2_project_server.domain.department.enums.College;
 import com.inuappcenter.team_2_project_server.domain.department.enums.Department;
 import com.inuappcenter.team_2_project_server.domain.laboratory.dto.LabCollegeDeptCountRow;
 import com.inuappcenter.team_2_project_server.domain.laboratory.entity.Laboratory;
@@ -27,10 +28,28 @@ public interface LaboratoryRepository extends JpaRepository<Laboratory, Long> {
     // 이 교수가 이미 명의로 된 연구실이 있는지 확인 (연구실 생성은 아직 없는 교수만 가능)
     boolean existsByProfessorId(Long professorId);
 
+    // 검색어(연구실명/교수명) + 단과대 + 학과 + 연구분야 조합 검색
+    // 값이 없는 조건은 '전체'로 처리한다. 문자열 조건(keyword, researchArea)은 null 대신 빈 문자열로 받아 전체를 의미한다.
+    // 연구분야는 join 대신 exists로 걸러서 distinct 없이 페이징이 정확하게 되도록 한다.
     @EntityGraph(attributePaths = "professor")
-    Page<Laboratory> findByLabNameContainingIgnoreCaseOrProfessor_NameContainingIgnoreCase(
-            String labNameKeyword,
-            String professorNameKeyword,
+    @Query("""
+            select l from Laboratory l
+            left join l.professor p
+            where (:keyword = ''
+                    or lower(l.labName) like lower(concat('%', :keyword, '%'))
+                    or lower(p.name) like lower(concat('%', :keyword, '%')))
+            and (:college is null or l.college = :college)
+            and (:department is null or l.department = :department)
+            and (:researchArea = '' or exists (
+                    select 1 from LaboratoryResearchArea lra
+                    where lra.laboratory = l and lra.researchKeyword.area = :researchArea
+            ))
+            """)
+    Page<Laboratory> searchByFilter(
+            @Param("keyword") String keyword,
+            @Param("college") College college,
+            @Param("department") Department department,
+            @Param("researchArea") String researchArea,
             Pageable pageable
     );
 

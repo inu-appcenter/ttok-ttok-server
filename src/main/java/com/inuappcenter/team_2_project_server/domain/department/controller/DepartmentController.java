@@ -14,7 +14,7 @@ import java.util.List;
 
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/api")
+@RequestMapping("/api/college")
 public class DepartmentController implements DepartmentApiSpecification {
 
     private final DepartmentService departmentService;
@@ -23,7 +23,7 @@ public class DepartmentController implements DepartmentApiSpecification {
      * 단과대 전체 조회 컨트롤러
      */
     @Override
-    @GetMapping("/college")
+    @GetMapping
     public ResponseEntity<ResponseDto<List<CollegeResponseDto>>> getAllColleges() {
         List<CollegeResponseDto> responses = departmentService.getAllColleges();
 

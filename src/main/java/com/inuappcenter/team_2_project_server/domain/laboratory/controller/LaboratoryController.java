@@ -103,13 +103,17 @@ public class LaboratoryController implements LaboratoryApiSpecification {
         );
     }
 
+    @Override
     @GetMapping("/search")
     public ResponseEntity<ResponseDto<PageResponseDto<LaboratoryResponseDto>>> searchLaboratory(
-            @RequestParam String keyword,
+            @RequestParam(required = false) String keyword,
+            @RequestParam(required = false) String college,
+            @RequestParam(required = false) String department,
+            @RequestParam(required = false) String researchArea,
             @RequestParam(defaultValue = "0") int page
     ) {
         Pageable pageable = PageRequest.of(page, 20);
-        Page<LaboratoryResponseDto> result = laboratoryService.searchLabs(keyword, pageable);
+        Page<LaboratoryResponseDto> result = laboratoryService.searchLabs(keyword, college, department, researchArea, pageable);
         return ResponseEntity.ok(
                 ResponseDto.of(PageResponseDto.from(result), "연구실 검색 성공")
         );
