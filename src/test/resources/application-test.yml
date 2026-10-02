@@ -26,3 +26,6 @@ ai:
 ntis:
   base-url: http://localhost
   api-key: test-ntis-api-key
+
+openalex:
+  base-url: http://localhost

@@ -52,7 +52,7 @@ public class SecurityConfig {
                         .requestMatchers("/api/member/login", "/api/member/reissue").permitAll()
 
                         // 인증이 필요없는 API
-                        .requestMatchers(HttpMethod.GET, "/api/laboratory/**", "/api/college/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/laboratory/**", "/api/college/**", "/api/research-metric/**").permitAll()
 
                         // 내 정보 조회는 로그인한 유저 본인이면 누구나 가능 (아래 관리자 전용 규칙보다 먼저 와야 함)
                         .requestMatchers(HttpMethod.GET, "/api/member/me").authenticated()
@@ -60,6 +60,8 @@ public class SecurityConfig {
                         // 관리자 전용
                         .requestMatchers(HttpMethod.GET, "/api/member", "/api/member/**").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.POST, "/api/laboratory/import", "/api/laboratory/research-projects/sync").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.POST, "/api/research-metric/sync").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.PATCH, "/api/research-metric/professor/*/author").hasRole("ADMIN")
 
                         // 오류 제보: 생성(POST)은 로그인 유저 누구나, 조회/삭제는 관리자만
                         .requestMatchers(HttpMethod.GET, "/api/bug-report", "/api/bug-report/**").hasRole("ADMIN")

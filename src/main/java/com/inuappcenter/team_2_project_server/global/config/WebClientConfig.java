@@ -36,6 +36,25 @@ public class WebClientConfig {
                 .build();
     }
 
+    /**
+     * 연구 지표 API (OpenAlex)
+     * 지표 동기화 배치에서 교수 수백 명을 순차로 조회하므로 NTIS와 같은 이유로 타임아웃을 건다
+     * base-url은 고정값이라 yml에 없으면 기본값을 사용한다
+     */
+    @Bean
+    public WebClient openAlexWebClient(
+            @Value("${openalex.base-url}") String baseUrl
+    ) {
+        HttpClient httpClient = HttpClient.create()
+                .option(ChannelOption.CONNECT_TIMEOUT_MILLIS, 5000)
+                .responseTimeout(Duration.ofSeconds(15));
+
+        return WebClient.builder()
+                .baseUrl(baseUrl)
+                .clientConnector(new ReactorClientHttpConnector(httpClient))
+                .build();
+    }
+
     // 응답 XML을 문자열로 받아 직접 파싱할 때 쓴다. WebClient의 자동 XML 디코딩에 기대지 않고
     // 우리가 정의한 필드(대외용 제공 가능 항목)만 매핑하며, 나머지 필드는 무시한다
     @Bean
