@@ -20,7 +20,8 @@ public interface DepartmentApiSpecification {
             summary = "단과대 전체 조회",
             description = """
                     서버에 정의된 단과대 목록을 전부 조회합니다. 개수가 적은 참조 데이터라 페이징하지 않습니다.
-                    college 값은 다른 API 요청 시 단과대 코드로 그대로 사용합니다.
+                    - 연구실 검색(GET /api/laboratory/search)에는 collegeName(한글 이름)을 보냅니다.
+                    - college(코드)는 enum 코드를 받는 API에서 사용합니다.
                     COLLEGE_OF_NULL 은 단과대에 속하지 않는 학부(법학부, 동북아국제통상물류학부)를 위한 값입니다.
                     """
     )
@@ -48,7 +49,8 @@ public interface DepartmentApiSpecification {
             summary = "학과 전체 조회",
             description = """
                     서버에 정의된 학과 목록을 소속 단과대 정보와 함께 전부 조회합니다. 개수가 적은 참조 데이터라 페이징하지 않습니다.
-                    department 값은 온보딩 등 다른 API 요청 시 학과 코드로 그대로 사용합니다. (예: professorDepartment)
+                    - 연구실 검색(GET /api/laboratory/search)에는 departmentName(한글 이름)을 보냅니다.
+                    - department(코드)는 온보딩 등 enum 코드를 받는 API에서 사용합니다. (예: professorDepartment)
                     """
     )
     @ApiResponse(
