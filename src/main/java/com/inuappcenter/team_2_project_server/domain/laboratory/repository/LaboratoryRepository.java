@@ -31,13 +31,14 @@ public interface LaboratoryRepository extends JpaRepository<Laboratory, Long> {
     // 검색어(연구실명/교수명) + 단과대 + 학과 + 연구분야 조합 검색
     // 값이 없는 조건은 '전체'로 처리한다. 문자열 조건(keyword, researchArea)은 null 대신 빈 문자열로 받아 전체를 의미한다.
     // 연구분야는 join 대신 exists로 걸러서 distinct 없이 페이징이 정확하게 되도록 한다.
+    // keyword는 서비스에서 %, _ 를 이스케이프해서 넘기므로 escape 문자를 지정한다.
     @EntityGraph(attributePaths = "professor")
     @Query("""
             select l from Laboratory l
             left join l.professor p
             where (:keyword = ''
-                    or lower(l.labName) like lower(concat('%', :keyword, '%'))
-                    or lower(p.name) like lower(concat('%', :keyword, '%')))
+                    or lower(l.labName) like lower(concat('%', :keyword, '%')) escape '\\'
+                    or lower(p.name) like lower(concat('%', :keyword, '%')) escape '\\')
             and (:college is null or l.college = :college)
             and (:department is null or l.department = :department)
             and (:researchArea = '' or exists (
