@@ -182,7 +182,7 @@ public class LaboratoryService {
         College college = isBlank(collegeName) ? null : College.fromCollegeName(collegeName.trim());
         Department department = isBlank(departmentName) ? null : Department.fromDepartmentName(departmentName.trim());
 
-        return laboratoryRepository.searchByFilter(trimOrEmpty(keyword), college, department, trimOrEmpty(researchArea), pageable)
+        return laboratoryRepository.searchByFilter(escapeLike(trimOrEmpty(keyword)), college, department, trimOrEmpty(researchArea), pageable)
                 .map(LaboratoryResponseDto::from);
     }
 
@@ -192,6 +192,13 @@ public class LaboratoryService {
 
     private String trimOrEmpty(String value) {
         return value == null ? "" : value.trim();
+    }
+
+    // like 검색에서 %, _ 가 와일드카드로 동작하지 않도록 이스케이프 (escape 문자는 \)
+    private String escapeLike(String value) {
+        return value.replace("\\", "\\\\")
+                .replace("%", "\\%")
+                .replace("_", "\\_");
     }
 
     // 카테고리(상위 개념)로 검색하면 하위 연구분야에 속한 연구실이 전부 조회됨
