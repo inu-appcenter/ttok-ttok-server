@@ -1,7 +1,7 @@
 package com.inuappcenter.team_2_project_server.domain.member.entity;
 
-import com.inuappcenter.team_2_project_server.domain.department.College;
-import com.inuappcenter.team_2_project_server.domain.department.Department;
+import com.inuappcenter.team_2_project_server.domain.department.enums.College;
+import com.inuappcenter.team_2_project_server.domain.department.enums.Department;
 import com.inuappcenter.team_2_project_server.domain.member.enums.UserType;
 import com.inuappcenter.team_2_project_server.global.entity.BaseEntity;
 import jakarta.persistence.*;

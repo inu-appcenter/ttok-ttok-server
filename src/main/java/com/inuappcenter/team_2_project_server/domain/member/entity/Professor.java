@@ -1,7 +1,7 @@
 package com.inuappcenter.team_2_project_server.domain.member.entity;
 
-import com.inuappcenter.team_2_project_server.domain.department.College;
-import com.inuappcenter.team_2_project_server.domain.department.Department;
+import com.inuappcenter.team_2_project_server.domain.department.enums.College;
+import com.inuappcenter.team_2_project_server.domain.department.enums.Department;
 import com.inuappcenter.team_2_project_server.global.entity.BaseEntity;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
@@ -58,6 +58,15 @@ public class Professor extends BaseEntity {
         this.email = email;
     }
 
+    public static Professor create(
+            String name,
+            String positionRaw,
+            Department department,
+            String phoneNumber,
+            String email) {
+        return new Professor(name, positionRaw, department, phoneNumber, email);
+    }
+
     // college는 department에 종속된 값이라 별도로 저장하지 않고 그때그때 계산한다
     public College getCollege() {
         return department == null ? null : department.getCollegeName();
@@ -94,14 +103,5 @@ public class Professor extends BaseEntity {
     // 온보딩에서 본인 이름으로 검색해 찾아낸 교수 레코드에 로그인 계정을 연결
     public void linkMember(Member member) {
         this.member = member;
-    }
-
-    public static Professor create(
-            String name,
-            String positionRaw,
-            Department department,
-            String phoneNumber,
-            String email) {
-        return new Professor(name, positionRaw, department, phoneNumber, email);
     }
 }

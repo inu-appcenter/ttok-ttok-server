@@ -1,7 +1,7 @@
 package com.inuappcenter.team_2_project_server.domain.laboratory.dto;
 
-import com.inuappcenter.team_2_project_server.domain.department.College;
-import com.inuappcenter.team_2_project_server.domain.department.Department;
+import com.inuappcenter.team_2_project_server.domain.department.enums.College;
+import com.inuappcenter.team_2_project_server.domain.department.enums.Department;
 
 /**
  * 단과대/학과별 연구실 개수 집계 쿼리의 행(row) 하나를 담는 flat DTO.

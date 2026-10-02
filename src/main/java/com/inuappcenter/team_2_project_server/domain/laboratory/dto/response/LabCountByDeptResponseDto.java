@@ -1,6 +1,6 @@
 package com.inuappcenter.team_2_project_server.domain.laboratory.dto.response;
 
-import com.inuappcenter.team_2_project_server.domain.department.Department;
+import com.inuappcenter.team_2_project_server.domain.department.enums.Department;
 import com.inuappcenter.team_2_project_server.domain.laboratory.dto.LabCollegeDeptCountRow;
 
 public record LabCountByDeptResponseDto(

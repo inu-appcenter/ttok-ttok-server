@@ -1,4 +1,4 @@
-package com.inuappcenter.team_2_project_server.domain.department;
+package com.inuappcenter.team_2_project_server.domain.department.enums;
 
 import com.inuappcenter.team_2_project_server.global.error.ex.ErrorCode;
 import com.inuappcenter.team_2_project_server.global.error.ex.MyException;
