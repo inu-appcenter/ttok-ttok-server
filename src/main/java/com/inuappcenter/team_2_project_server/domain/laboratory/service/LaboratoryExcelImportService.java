@@ -1,20 +1,12 @@
 package com.inuappcenter.team_2_project_server.domain.laboratory.service;
 
-import com.inuappcenter.team_2_project_server.domain.department.Department;
+import com.inuappcenter.team_2_project_server.domain.department.enums.Department;
 import com.inuappcenter.team_2_project_server.domain.laboratory.dto.parse.LaboratoryExcelRow;
 import com.inuappcenter.team_2_project_server.domain.laboratory.dto.parse.ProfessorExcelRow;
 import com.inuappcenter.team_2_project_server.domain.laboratory.dto.parse.PublicationExcelRow;
 import com.inuappcenter.team_2_project_server.domain.laboratory.dto.parse.ResearchAreaCategoryExcelRow;
-import com.inuappcenter.team_2_project_server.domain.laboratory.entity.Laboratory;
-import com.inuappcenter.team_2_project_server.domain.laboratory.entity.LaboratoryResearchArea;
-import com.inuappcenter.team_2_project_server.domain.laboratory.entity.Publication;
-import com.inuappcenter.team_2_project_server.domain.laboratory.entity.ResearchArea;
-import com.inuappcenter.team_2_project_server.domain.laboratory.entity.ResearchAreaCategory;
-import com.inuappcenter.team_2_project_server.domain.laboratory.repository.LaboratoryRepository;
-import com.inuappcenter.team_2_project_server.domain.laboratory.repository.LaboratoryResearchKeywordRepository;
-import com.inuappcenter.team_2_project_server.domain.laboratory.repository.PublicationRepository;
-import com.inuappcenter.team_2_project_server.domain.laboratory.repository.ResearchAreaCategoryRepository;
-import com.inuappcenter.team_2_project_server.domain.laboratory.repository.ResearchKeywordRepository;
+import com.inuappcenter.team_2_project_server.domain.laboratory.entity.*;
+import com.inuappcenter.team_2_project_server.domain.laboratory.repository.*;
 import com.inuappcenter.team_2_project_server.domain.member.entity.Professor;
 import com.inuappcenter.team_2_project_server.domain.member.service.ProfessorService;
 import com.inuappcenter.team_2_project_server.global.error.ex.ErrorCode;

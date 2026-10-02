@@ -1,5 +1,7 @@
 package com.inuappcenter.team_2_project_server.domain.laboratory.service;
 
+import com.inuappcenter.team_2_project_server.domain.department.enums.College;
+import com.inuappcenter.team_2_project_server.domain.department.enums.Department;
 import com.inuappcenter.team_2_project_server.domain.laboratory.dto.LabCollegeDeptCountRow;
 import com.inuappcenter.team_2_project_server.domain.laboratory.dto.request.LaboratoryCapacityUpdateRequestDto;
 import com.inuappcenter.team_2_project_server.domain.laboratory.dto.request.LaboratoryCreateRequestDto;
@@ -167,16 +169,36 @@ public class LaboratoryService {
                 .collect(Collectors.joining(", "));
     }
 
+    // 모든 조건은 선택값이며, 비어 있으면 해당 조건은 '전체'로 처리됨
+    // 단과대/학과는 한글 이름(예: 공과대학, 전자공학부)으로 받아 enum으로 변환 (없는 이름이면 INVALID_INPUT)
     @Transactional(readOnly = true)
-    public Page<LaboratoryResponseDto> searchLabs(String keyword, Pageable pageable) {
-        if (keyword == null || keyword.isBlank()) {
-            throw new MyException(ErrorCode.INVALID_SEARCH_KEYWORD);
-        }
+    public Page<LaboratoryResponseDto> searchLabs(
+            String keyword,
+            String collegeName,
+            String departmentName,
+            String researchArea,
+            Pageable pageable
+    ) {
+        College college = isBlank(collegeName) ? null : College.fromCollegeName(collegeName.trim());
+        Department department = isBlank(departmentName) ? null : Department.fromDepartmentName(departmentName.trim());
 
-        String trimmedKeyword = keyword.trim();
-
-        return laboratoryRepository.findByLabNameContainingIgnoreCaseOrProfessor_NameContainingIgnoreCase(trimmedKeyword, trimmedKeyword, pageable)
+        return laboratoryRepository.searchByFilter(escapeLike(trimOrEmpty(keyword)), college, department, trimOrEmpty(researchArea), pageable)
                 .map(LaboratoryResponseDto::from);
+    }
+
+    private boolean isBlank(String value) {
+        return value == null || value.isBlank();
+    }
+
+    private String trimOrEmpty(String value) {
+        return value == null ? "" : value.trim();
+    }
+
+    // like 검색에서 %, _ 가 와일드카드로 동작하지 않도록 이스케이프 (escape 문자는 \)
+    private String escapeLike(String value) {
+        return value.replace("\\", "\\\\")
+                .replace("%", "\\%")
+                .replace("_", "\\_");
     }
 
     // 카테고리(상위 개념)로 검색하면 하위 연구분야에 속한 연구실이 전부 조회됨

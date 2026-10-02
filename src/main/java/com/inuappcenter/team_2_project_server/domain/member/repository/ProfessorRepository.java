@@ -1,6 +1,6 @@
 package com.inuappcenter.team_2_project_server.domain.member.repository;
 
-import com.inuappcenter.team_2_project_server.domain.department.Department;
+import com.inuappcenter.team_2_project_server.domain.department.enums.Department;
 import com.inuappcenter.team_2_project_server.domain.member.entity.Professor;
 import org.springframework.data.jpa.repository.JpaRepository;
 

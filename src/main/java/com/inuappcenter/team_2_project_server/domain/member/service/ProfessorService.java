@@ -1,6 +1,6 @@
 package com.inuappcenter.team_2_project_server.domain.member.service;
 
-import com.inuappcenter.team_2_project_server.domain.department.Department;
+import com.inuappcenter.team_2_project_server.domain.department.enums.Department;
 import com.inuappcenter.team_2_project_server.domain.member.dto.request.ProfessorUpdateRequestDto;
 import com.inuappcenter.team_2_project_server.domain.member.dto.response.ProfessorResponseDto;
 import com.inuappcenter.team_2_project_server.domain.member.entity.Member;

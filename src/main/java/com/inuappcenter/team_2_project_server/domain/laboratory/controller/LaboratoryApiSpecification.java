@@ -493,8 +493,13 @@ public interface LaboratoryApiSpecification {
     @Operation(
             summary = "연구실 검색",
             description = """
-                    연구실명 또는 교수명에 검색어가 포함된 연구실을 페이지 단위로 조회합니다.
-                    page(0-based) 쿼리 파라미터만 사용하며, 한 페이지당 20건으로 고정입니다.
+                    검색어(연구실명/교수명), 단과대, 학과, 연구분야 조건을 조합해 연구실을 페이지 단위로 조회합니다.
+                    모든 조건은 선택값이며, 보내지 않은 조건은 '전체'로 처리합니다. (조건을 하나도 보내지 않으면 전체 연구실 조회)
+                    - 학과 드롭다운에서 특정 학과 선택 시 department, '단과대 전체' 선택 시 college 만 보냅니다.
+                    - college/department 는 코드가 아닌 한글 이름으로 보냅니다. (단과대/학과 조회 API 응답의 collegeName, departmentName 값)
+                    - researchArea 는 세부 연구분야 이름으로 보내며, 이름이 정확히 일치하는 분야만 조회됩니다.
+                    - 존재하지 않는 단과대/학과 이름이면 400(INVALID_INPUT)을 반환합니다.
+                    page(0-based), 한 페이지당 20건으로 고정입니다.
                     """
     )
     @ApiResponses({
@@ -548,26 +553,17 @@ public interface LaboratoryApiSpecification {
                                     }
                                     """)
                     )
-            ),
-            @ApiResponse(
-                    responseCode = "400",
-                    description = "검색어가 비어 있음",
-                    content = @Content(
-                            mediaType = "application/json",
-                            schema = @Schema(implementation = ResponseDto.class),
-                            examples = @ExampleObject(value = """
-                                    {
-                                      "data": null,
-                                      "code": "NO_SEARCH_KEYWORD",
-                                      "message": "허용하지 않는 검색어입니다."
-                                    }
-                                    """)
-                    )
             )
     })
     ResponseEntity<ResponseDto<PageResponseDto<LaboratoryResponseDto>>> searchLaboratory(
-            @Parameter(description = "연구실명 또는 교수명 검색어", required = true, example = "홍길동")
-            @RequestParam String keyword,
+            @Parameter(description = "연구실명 또는 교수명 검색어 (선택)", example = "홍길동")
+            @RequestParam(required = false) String keyword,
+            @Parameter(description = "단과대 이름 (선택)", example = "공과대학")
+            @RequestParam(required = false) String college,
+            @Parameter(description = "학과 이름 (선택)", example = "전자공학부")
+            @RequestParam(required = false) String department,
+            @Parameter(description = "세부 연구분야 이름 (선택)", example = "인공지능")
+            @RequestParam(required = false) String researchArea,
             @Parameter(description = "0부터 시작하는 페이지 번호", example = "0")
             @RequestParam(defaultValue = "0") int page
     );

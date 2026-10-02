@@ -1,7 +1,7 @@
 package com.inuappcenter.team_2_project_server.laboratory;
 
-import com.inuappcenter.team_2_project_server.domain.department.College;
-import com.inuappcenter.team_2_project_server.domain.department.Department;
+import com.inuappcenter.team_2_project_server.domain.department.enums.College;
+import com.inuappcenter.team_2_project_server.domain.department.enums.Department;
 import com.inuappcenter.team_2_project_server.domain.laboratory.client.NtisClient;
 import com.inuappcenter.team_2_project_server.domain.laboratory.dto.NtisProjectSearchResponse;
 import com.inuappcenter.team_2_project_server.domain.laboratory.entity.Laboratory;

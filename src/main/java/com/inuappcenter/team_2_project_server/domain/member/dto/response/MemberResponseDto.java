@@ -1,6 +1,6 @@
 package com.inuappcenter.team_2_project_server.domain.member.dto.response;
 
-import com.inuappcenter.team_2_project_server.domain.department.Department;
+import com.inuappcenter.team_2_project_server.domain.department.enums.Department;
 import com.inuappcenter.team_2_project_server.domain.laboratory.dto.response.CoffeeChatResponseDto;
 import com.inuappcenter.team_2_project_server.domain.laboratory.dto.response.LabReviewResponseDto;
 import com.inuappcenter.team_2_project_server.domain.laboratory.dto.response.LaboratoryResponseDto;

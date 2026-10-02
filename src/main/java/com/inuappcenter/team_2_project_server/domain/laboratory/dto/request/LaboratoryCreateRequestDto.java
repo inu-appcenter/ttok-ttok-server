@@ -1,7 +1,7 @@
 package com.inuappcenter.team_2_project_server.domain.laboratory.dto.request;
 
-import com.inuappcenter.team_2_project_server.domain.department.College;
-import com.inuappcenter.team_2_project_server.domain.department.Department;
+import com.inuappcenter.team_2_project_server.domain.department.enums.College;
+import com.inuappcenter.team_2_project_server.domain.department.enums.Department;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;

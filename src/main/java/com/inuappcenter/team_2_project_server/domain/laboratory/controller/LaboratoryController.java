@@ -12,6 +12,8 @@ import com.inuappcenter.team_2_project_server.domain.laboratory.service.Research
 import com.inuappcenter.team_2_project_server.domain.member.entity.Member;
 import com.inuappcenter.team_2_project_server.global.dto.PageResponseDto;
 import com.inuappcenter.team_2_project_server.global.dto.ResponseDto;
+import com.inuappcenter.team_2_project_server.global.error.ex.ErrorCode;
+import com.inuappcenter.team_2_project_server.global.error.ex.MyException;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -71,7 +73,7 @@ public class LaboratoryController implements LaboratoryApiSpecification {
     public ResponseEntity<ResponseDto<PageResponseDto<LaboratoryResponseDto>>> getAllLaboratory(
             @RequestParam(defaultValue = "0") int page
     ) {
-        Pageable pageable = PageRequest.of(page, 20, Sort.by(Sort.Direction.ASC, "labName"));
+        Pageable pageable = PageRequest.of(validatePage(page), 20, Sort.by(Sort.Direction.ASC, "labName"));
         Page<LaboratoryResponseDto> result = laboratoryService.getAllLab(pageable);
 
         return ResponseEntity.ok(
@@ -103,13 +105,18 @@ public class LaboratoryController implements LaboratoryApiSpecification {
         );
     }
 
+    @Override
     @GetMapping("/search")
     public ResponseEntity<ResponseDto<PageResponseDto<LaboratoryResponseDto>>> searchLaboratory(
-            @RequestParam String keyword,
+            @RequestParam(required = false) String keyword,
+            @RequestParam(required = false) String college,
+            @RequestParam(required = false) String department,
+            @RequestParam(required = false) String researchArea,
             @RequestParam(defaultValue = "0") int page
     ) {
-        Pageable pageable = PageRequest.of(page, 20);
-        Page<LaboratoryResponseDto> result = laboratoryService.searchLabs(keyword, pageable);
+        // 페이지를 넘겨도 순서가 바뀌지 않도록 이름순 + id로 정렬 고정
+        Pageable pageable = PageRequest.of(validatePage(page), 20, Sort.by(Sort.Direction.ASC, "labName").and(Sort.by("id")));
+        Page<LaboratoryResponseDto> result = laboratoryService.searchLabs(keyword, college, department, researchArea, pageable);
         return ResponseEntity.ok(
                 ResponseDto.of(PageResponseDto.from(result), "연구실 검색 성공")
         );
@@ -121,7 +128,7 @@ public class LaboratoryController implements LaboratoryApiSpecification {
             @RequestParam String categoryName,
             @RequestParam(defaultValue = "0") int page
     ) {
-        Pageable pageable = PageRequest.of(page, 20);
+        Pageable pageable = PageRequest.of(validatePage(page), 20);
         Page<LaboratoryResponseDto> result = laboratoryService.searchLabsByCategory(categoryName, pageable);
         return ResponseEntity.ok(
                 ResponseDto.of(PageResponseDto.from(result), "카테고리별 연구실 검색 성공")
@@ -134,7 +141,7 @@ public class LaboratoryController implements LaboratoryApiSpecification {
             @PathVariable Long laboratoryId,
             @RequestParam(defaultValue = "0") int page
     ) {
-        Pageable pageable = PageRequest.of(page, 5, Sort.by(Sort.Direction.DESC, "year"));
+        Pageable pageable = PageRequest.of(validatePage(page), 5, Sort.by(Sort.Direction.DESC, "year"));
         Page<PublicationResponseDto> result = laboratoryService.getLabPublications(laboratoryId, pageable);
         return ResponseEntity.ok(
                 ResponseDto.of(PageResponseDto.from(result), "연구실 논문 목록 조회 성공")
@@ -151,7 +158,7 @@ public class LaboratoryController implements LaboratoryApiSpecification {
             @RequestParam(defaultValue = "0") int page
     ) {
         Pageable pageable = PageRequest.of(
-                page, 5, Sort.by(Sort.Direction.DESC, "ongoing").and(Sort.by(Sort.Direction.DESC, "projectYear"))
+                validatePage(page), 5, Sort.by(Sort.Direction.DESC, "ongoing").and(Sort.by(Sort.Direction.DESC, "projectYear"))
         );
         Page<ResearchProjectResponseDto> result = laboratoryService.getLabResearchProjects(laboratoryId, pageable);
         return ResponseEntity.ok(
@@ -179,5 +186,13 @@ public class LaboratoryController implements LaboratoryApiSpecification {
         return ResponseEntity.ok(
                 ResponseDto.of(responses, "전체 단과대/학과별 연구실 갯수 조회 성공")
         );
+    }
+
+    // 음수 페이지가 들어오면 PageRequest에서 500이 나므로 400으로 막음
+    private int validatePage(int page) {
+        if (page < 0) {
+            throw new MyException(ErrorCode.INVALID_INPUT);
+        }
+        return page;
     }
 }
