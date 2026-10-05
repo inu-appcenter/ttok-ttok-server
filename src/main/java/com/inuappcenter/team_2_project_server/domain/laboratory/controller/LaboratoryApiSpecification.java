@@ -2,6 +2,7 @@ package com.inuappcenter.team_2_project_server.domain.laboratory.controller;
 
 import com.inuappcenter.team_2_project_server.domain.laboratory.dto.request.LaboratoryCreateRequestDto;
 import com.inuappcenter.team_2_project_server.domain.laboratory.dto.request.LaboratoryUpdateRequestDto;
+import com.inuappcenter.team_2_project_server.domain.laboratory.dto.request.ResearchProjectAssignRequestDto;
 import com.inuappcenter.team_2_project_server.domain.laboratory.dto.response.LabCountByCollegeResponseDto;
 import com.inuappcenter.team_2_project_server.domain.laboratory.dto.response.LaboratoryResponseDto;
 import com.inuappcenter.team_2_project_server.domain.laboratory.dto.response.PublicationResponseDto;
@@ -738,6 +739,104 @@ public interface LaboratoryApiSpecification {
             )
     )
     ResponseEntity<ResponseDto<Void>> syncAllResearchProjects();
+
+    @Operation(
+            summary = "연구실 매핑 보류 연구과제 목록 조회 (관리자 전용)",
+            description = """
+                    동기화 배치가 어느 연구실 과제인지 판별하지 못해 연구실 매핑을 보류한 연구과제 목록을 조회합니다.
+                    NTIS는 연구책임자 이름으로만 검색되어, 같은 이름의 교수(동명이인)가 있으면 과제 분류로 판별하고
+                    판별이 애매하면 보류합니다. 보류된 과제는 연구실 연구과제 목록에 노출되지 않습니다.
+                    page(0-based), 한 페이지당 20건으로 고정이며 연구책임자 이름순으로 정렬됩니다.
+                    """
+    )
+    @ApiResponse(
+            responseCode = "200",
+            description = "매핑 보류 연구과제 목록 조회 성공",
+            content = @Content(
+                    mediaType = "application/json",
+                    schema = @Schema(implementation = ResponseDto.class),
+                    examples = @ExampleObject(value = """
+                            {
+                              "data": {
+                                "content": [
+                                  {
+                                    "id": 12,
+                                    "projectNumber": "1711041912",
+                                    "titleKorean": "차세대 모빌리티용 수소저장 시스템 개발",
+                                    "titleEnglish": null,
+                                    "managerName": "김태완",
+                                    "budgetProjectName": "에너지기술수용성제고및사업화촉진(R&D)",
+                                    "researchAgencyName": "인천대학교",
+                                    "ministryName": "산업통상자원부",
+                                    "projectYear": "2025",
+                                    "periodStart": "20250101",
+                                    "periodEnd": "20251231",
+                                    "totalPeriodStart": "2024-04-01 00:00:00.0",
+                                    "totalPeriodEnd": "2027-12-31 00:00:00.0",
+                                    "governmentFunds": "100000000",
+                                    "totalFunds": "150000000",
+                                    "contentSummary": "수소저장 시스템 개발...",
+                                    "keywordKorean": "수소저장,모빌리티",
+                                    "keywordEnglish": "hydrogen storage,mobility",
+                                    "ongoing": true,
+                                    "ntisDetailUrl": "https://www.ntis.go.kr/project/pjtInfo.do?pjtId=1711041912"
+                                  }
+                                ],
+                                "page": 0,
+                                "size": 20,
+                                "totalElements": 1,
+                                "totalPages": 1,
+                                "hasNext": false,
+                                "last": true
+                              },
+                              "code": null,
+                              "message": "매핑 보류 연구과제 목록 조회 성공"
+                            }
+                            """)
+            )
+    )
+    ResponseEntity<ResponseDto<PageResponseDto<ResearchProjectResponseDto>>> getPendingResearchProjects(
+            @Parameter(description = "0부터 시작하는 페이지 번호", example = "0")
+            @RequestParam(defaultValue = "0") int page
+    );
+
+    @Operation(
+            summary = "연구과제 연구실 수동 지정 (관리자 전용)",
+            description = """
+                    연구과제를 어느 연구실 과제로 보여줄지 관리자가 직접 지정합니다.
+                    매핑이 보류됐거나 잘못 매핑된 과제를 바로잡을 때 사용하며, 이후 동기화 배치의 자동 매핑이 덮어쓰지 않습니다.
+                    """
+    )
+    @ApiResponses({
+            @ApiResponse(
+                    responseCode = "200",
+                    description = "연구과제 연구실 지정 완료",
+                    content = @Content(
+                            mediaType = "application/json",
+                            schema = @Schema(implementation = ResponseDto.class)
+                    )
+            ),
+            @ApiResponse(
+                    responseCode = "404",
+                    description = "존재하지 않는 연구과제 또는 연구실",
+                    content = @Content(
+                            mediaType = "application/json",
+                            schema = @Schema(implementation = ResponseDto.class),
+                            examples = @ExampleObject(value = """
+                                    {
+                                      "data": null,
+                                      "code": "RESEARCH_PROJECT_NOT_FOUND",
+                                      "message": "존재하지 않는 연구과제입니다."
+                                    }
+                                    """)
+                    )
+            )
+    })
+    ResponseEntity<ResponseDto<ResearchProjectResponseDto>> assignResearchProjectLaboratory(
+            @Parameter(description = "연구과제 ID", required = true, example = "12")
+            @PathVariable Long researchProjectId,
+            @RequestBody ResearchProjectAssignRequestDto request
+    );
 
     @Operation(
             summary = "단과대/학과별 연구실 개수 조회",

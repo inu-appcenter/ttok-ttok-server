@@ -14,4 +14,7 @@ public interface ResearchProjectRepository extends JpaRepository<ResearchProject
     Optional<ResearchProject> findByProjectNumber(String projectNumber);
 
     Page<ResearchProject> findByLaboratory(Laboratory laboratory, Pageable pageable);
+
+    // 동명이인이라 연구실 매핑이 보류된 과제 (관리자 확인용)
+    Page<ResearchProject> findByLaboratoryIsNull(Pageable pageable);
 }

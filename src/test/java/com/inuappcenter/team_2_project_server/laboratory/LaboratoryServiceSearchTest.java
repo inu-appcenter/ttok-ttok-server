@@ -6,7 +6,6 @@ import com.inuappcenter.team_2_project_server.domain.laboratory.repository.Labor
 import com.inuappcenter.team_2_project_server.domain.laboratory.repository.PublicationRepository;
 import com.inuappcenter.team_2_project_server.domain.laboratory.repository.ResearchProjectRepository;
 import com.inuappcenter.team_2_project_server.domain.laboratory.service.LaboratoryService;
-import com.inuappcenter.team_2_project_server.domain.laboratory.service.ResearchProjectSyncService;
 import com.inuappcenter.team_2_project_server.domain.member.service.ProfessorService;
 import com.inuappcenter.team_2_project_server.domain.member.service.ResearcherService;
 import com.inuappcenter.team_2_project_server.global.error.ex.ErrorCode;
@@ -45,7 +44,6 @@ class LaboratoryServiceSearchTest {
                 mock(ProfessorService.class),
                 mock(PublicationRepository.class),
                 mock(ResearchProjectRepository.class),
-                mock(ResearchProjectSyncService.class),
                 mock(ResearcherService.class)
         );
         given(laboratoryRepository.searchByFilter(anyBoolean(), anyList(), any(), any(), anyString(), anyList(), any()))

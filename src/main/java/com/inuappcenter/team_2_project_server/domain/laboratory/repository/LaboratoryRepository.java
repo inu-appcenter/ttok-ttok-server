@@ -73,6 +73,10 @@ public interface LaboratoryRepository extends JpaRepository<Laboratory, Long> {
     @EntityGraph(attributePaths = "professor")
     Page<Laboratory> findAll(Pageable pageable);
 
+    // 연구과제 동기화용: 트랜잭션 밖에서 담당교수 이름을 읽으므로 교수까지 함께 조회 (지연 로딩 시 세션이 없어 실패함)
+    @EntityGraph(attributePaths = "professor")
+    List<Laboratory> findAllBy();
+
     // 연구 지표 동기화 대상: 연구실을 가진 교수 (연구실 없는 교수까지 조회하면 외부 API 호출만 낭비됨)
     @Query("select distinct l.professor from Laboratory l where l.professor is not null")
     List<Professor> findAllProfessorsHavingLaboratory();

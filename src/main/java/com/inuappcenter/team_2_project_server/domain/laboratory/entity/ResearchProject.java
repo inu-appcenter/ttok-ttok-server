@@ -27,9 +27,14 @@ public class ResearchProject extends BaseEntity {
     @Column(name = "research_project_id")
     private Long id;
 
+    // 동명이인 교수의 과제라 어느 연구실 과제인지 판별하지 못하면 null(매핑 보류)로 저장하고, 관리자가 직접 지정한다
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "laboratory_id", nullable = false)
+    @JoinColumn(name = "laboratory_id")
     private Laboratory laboratory;
+
+    // 관리자가 직접 연구실을 지정한 과제. 이후 동기화 배치의 자동 매핑이 덮어쓰지 않는다
+    @Column(name = "manually_assigned", nullable = false)
+    private boolean manuallyAssigned;
 
     // NTIS 과제고유번호. 상세페이지 링크(https://www.ntis.go.kr/project/pjtInfo.do?pjtId={projectNumber}) 생성 및 재동기화 매칭 키로 쓴다
     @Column(name = "project_number", nullable = false)
@@ -158,6 +163,20 @@ public class ResearchProject extends BaseEntity {
                 totalPeriodStart, totalPeriodEnd, governmentFunds, totalFunds,
                 contentSummary, keywordKorean, keywordEnglish, ongoing
         );
+    }
+
+    // 동기화 배치의 자동 매핑 결과 반영 (laboratory가 null이면 매핑 보류). 관리자가 직접 지정한 과제는 덮어쓰지 않는다
+    public void assignLaboratory(Laboratory laboratory) {
+        if (manuallyAssigned) {
+            return;
+        }
+        this.laboratory = laboratory;
+    }
+
+    // 관리자가 직접 연구실을 지정 (자동 매핑이 보류됐거나 잘못 매핑된 과제를 바로잡을 때 사용)
+    public void assignLaboratoryManually(Laboratory laboratory) {
+        this.laboratory = laboratory;
+        this.manuallyAssigned = true;
     }
 
     // 재동기화 시 최신 값으로 갱신
