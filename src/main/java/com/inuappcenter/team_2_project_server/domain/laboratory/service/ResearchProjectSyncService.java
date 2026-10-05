@@ -68,7 +68,7 @@ public class ResearchProjectSyncService {
     @Scheduled(cron = "0 0 4 * * *") // 매일 새벽 4시
     public void syncAll() {
         // 교수 한 명당 연구실은 하나라서 첫 번째 연구실만 쓴다
-        Map<Long, Laboratory> laboratoryByProfessorId = laboratoryRepository.findAll().stream()
+        Map<Long, Laboratory> laboratoryByProfessorId = laboratoryRepository.findAllBy().stream()
                 .filter(laboratory -> laboratory.getProfessor() != null && !isBlank(laboratory.getProfessor().getName()))
                 .collect(Collectors.toMap(
                         laboratory -> laboratory.getProfessor().getId(),

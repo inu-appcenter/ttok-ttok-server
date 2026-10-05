@@ -66,7 +66,7 @@ class ResearchProjectSyncServiceTest {
                 new TransactionTemplate(mock(PlatformTransactionManager.class))
         );
 
-        given(laboratoryRepository.findAll()).willReturn(laboratories);
+        given(laboratoryRepository.findAllBy()).willReturn(laboratories);
         given(professorRepository.findAll()).willReturn(professors);
         given(researchProjectRepository.findByProjectNumber(anyString())).willReturn(Optional.empty());
         given(ntisClient.searchByManagerName(anyString(), anyInt(), anyInt())).willReturn(List.of());
