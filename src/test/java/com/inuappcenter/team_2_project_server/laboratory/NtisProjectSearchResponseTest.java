@@ -173,4 +173,52 @@ class NtisProjectSearchResponseTest {
         // 매뉴얼 예시에서도 Teaser는 비어있고 Full에 요약 분량이 들어온다
         assertThat(hit.contentSummary()).startsWith("나노 멤브레인 공정 플랫폼 개발");
     }
+
+    // 운영 서버에서 확인한 실제 응답 구조: 신분류(type="new")는 sequence 1~3, 구분류(type="old")는 비어 있음
+    private static final String SCIENCE_CLASS_XML = """
+            <?xml version="1.0" encoding="UTF-8"?>
+            <RESULT>
+                <RESULTSET>
+                    <HIT NO="1">
+                        <ProjectNumber>1711000001</ProjectNumber>
+                        <ScienceClass type="old" />
+                        <ScienceClass type="new" sequence="2">
+                            <Large code="EA">원자력</Large>
+                            <Medium>원자력안전기술</Medium>
+                            <Small>설계기준사고 열수력 안전성 실증/평가기술</Small>
+                        </ScienceClass>
+                        <ScienceClass type="new" sequence="1">
+                            <Large>건설/교통</Large>
+                            <Medium>건설시공/재료</Medium>
+                            <Small>건설시공관리기술</Small>
+                        </ScienceClass>
+                        <ScienceClass type="new" sequence="3">
+                            <Large />
+                        </ScienceClass>
+                    </HIT>
+                </RESULTSET>
+            </RESULT>
+            """;
+
+    @Test
+    void newScienceClassLarges_returns_new_classification_in_sequence_order() throws Exception {
+        XmlMapper xmlMapper = new XmlMapper();
+        xmlMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+
+        NtisProjectSearchResponse response = xmlMapper.readValue(SCIENCE_CLASS_XML, NtisProjectSearchResponse.class);
+        NtisProjectSearchResponse.Hit hit = response.hitsOrEmpty().get(0);
+
+        assertThat(hit.scienceClasses()).hasSize(4);
+        assertThat(hit.newScienceClassLarges()).containsExactly("건설/교통", "원자력");
+    }
+
+    @Test
+    void newScienceClassLarges_is_empty_when_science_class_is_missing() throws Exception {
+        XmlMapper xmlMapper = new XmlMapper();
+        xmlMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+
+        NtisProjectSearchResponse response = xmlMapper.readValue(SAMPLE_XML, NtisProjectSearchResponse.class);
+
+        assertThat(response.hitsOrEmpty().get(0).newScienceClassLarges()).isEmpty();
+    }
 }
