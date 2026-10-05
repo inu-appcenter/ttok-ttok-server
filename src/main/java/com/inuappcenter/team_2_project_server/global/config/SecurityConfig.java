@@ -51,6 +51,9 @@ public class SecurityConfig {
                         // 최우선 허용
                         .requestMatchers("/api/member/login", "/api/member/reissue").permitAll()
 
+                        // 매핑 보류 연구과제 목록은 관리자 전용 (아래 /api/laboratory/** 공개 규칙보다 먼저 와야 함)
+                        .requestMatchers(HttpMethod.GET, "/api/laboratory/research-projects/pending").hasRole("ADMIN")
+
                         // 인증이 필요없는 API
                         .requestMatchers(HttpMethod.GET, "/api/laboratory/**", "/api/college/**", "/api/research-metric/**", "/api/research-area-category/**").permitAll()
 
@@ -61,7 +64,7 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/api/member", "/api/member/**").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.POST, "/api/laboratory/import", "/api/laboratory/research-projects/sync").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.POST, "/api/research-metric/sync").hasRole("ADMIN")
-                        .requestMatchers(HttpMethod.PATCH, "/api/research-metric/professor/*/author").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.PATCH, "/api/research-metric/professor/*/author", "/api/laboratory/research-projects/*/laboratory").hasRole("ADMIN")
 
                         // 오류 제보: 생성(POST)은 로그인 유저 누구나, 조회/삭제는 관리자만
                         .requestMatchers(HttpMethod.GET, "/api/bug-report", "/api/bug-report/**").hasRole("ADMIN")
