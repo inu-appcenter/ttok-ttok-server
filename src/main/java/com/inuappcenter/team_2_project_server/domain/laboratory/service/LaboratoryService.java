@@ -24,6 +24,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -170,28 +171,68 @@ public class LaboratoryService {
     }
 
     // 모든 조건은 선택값이며, 비어 있으면 해당 조건은 '전체'로 처리됨
+    // 카테고리/단과대/학과로 범위를 좁히고, 그 안에서 키워드로 검색한다
     // 단과대/학과는 한글 이름(예: 공과대학, 전자공학부)으로 받아 enum으로 변환 (없는 이름이면 INVALID_INPUT)
+    // 키워드는 공백을 무시하고 연구실명/교수명/학과명/세부 연구분야명/카테고리명과 부분일치로 비교
     @Transactional(readOnly = true)
     public Page<LaboratoryResponseDto> searchLabs(
             String keyword,
+            List<String> categoryNames,
             String collegeName,
             String departmentName,
-            String researchArea,
             Pageable pageable
     ) {
+        List<String> categories = normalizeCategories(categoryNames);
         College college = isBlank(collegeName) ? null : College.fromCollegeName(collegeName.trim());
         Department department = isBlank(departmentName) ? null : Department.fromDepartmentName(departmentName.trim());
+        String normalizedKeyword = normalizeKeyword(keyword);
 
-        return laboratoryRepository.searchByFilter(escapeLike(trimOrEmpty(keyword)), college, department, trimOrEmpty(researchArea), pageable)
-                .map(LaboratoryResponseDto::from);
+        return laboratoryRepository.searchByFilter(
+                categories.isEmpty(),
+                categories,
+                college,
+                department,
+                escapeLike(normalizedKeyword),
+                findDepartmentsContaining(normalizedKeyword),
+                pageable
+        ).map(LaboratoryResponseDto::from);
     }
 
     private boolean isBlank(String value) {
         return value == null || value.isBlank();
     }
 
-    private String trimOrEmpty(String value) {
-        return value == null ? "" : value.trim();
+    // 카테고리는 각 값을 trim하고, 빈 값과 중복은 제거
+    private List<String> normalizeCategories(List<String> categoryNames) {
+        if (categoryNames == null) {
+            return List.of();
+        }
+
+        return categoryNames.stream()
+                .filter(name -> !isBlank(name))
+                .map(String::trim)
+                .distinct()
+                .toList();
+    }
+
+    // 공백을 무시하고 비교하기 위해 모든 공백을 제거하고 소문자로 변환 (null이면 빈 문자열 = 전체)
+    private String normalizeKeyword(String keyword) {
+        return keyword == null ? "" : removeWhitespace(keyword).toLowerCase();
+    }
+
+    private String removeWhitespace(String value) {
+        return value.replaceAll("\\s+", "");
+    }
+
+    // 학과는 enum이라 DB에서 이름으로 비교할 수 없으므로, 한글 학과명이 키워드를 포함하는 학과를 미리 찾아 넘김
+    private List<Department> findDepartmentsContaining(String normalizedKeyword) {
+        if (normalizedKeyword.isEmpty()) {
+            return List.of();
+        }
+
+        return Arrays.stream(Department.values())
+                .filter(department -> removeWhitespace(department.getDepartmentName()).toLowerCase().contains(normalizedKeyword))
+                .toList();
     }
 
     // like 검색에서 %, _ 가 와일드카드로 동작하지 않도록 이스케이프 (escape 문자는 \)
@@ -199,17 +240,6 @@ public class LaboratoryService {
         return value.replace("\\", "\\\\")
                 .replace("%", "\\%")
                 .replace("_", "\\_");
-    }
-
-    // 카테고리(상위 개념)로 검색하면 하위 연구분야에 속한 연구실이 전부 조회됨
-    @Transactional(readOnly = true)
-    public Page<LaboratoryResponseDto> searchLabsByCategory(String categoryName, Pageable pageable) {
-        if (categoryName == null || categoryName.isBlank()) {
-            throw new MyException(ErrorCode.INVALID_SEARCH_KEYWORD);
-        }
-
-        return laboratoryRepository.findByResearchAreaCategoryName(categoryName.trim(), pageable)
-                .map(LaboratoryResponseDto::from);
     }
 
     @Transactional(readOnly = true)
