@@ -2,6 +2,7 @@ package com.inuappcenter.team_2_project_server.domain.laboratory.controller;
 
 import com.inuappcenter.team_2_project_server.domain.laboratory.dto.request.LaboratoryCreateRequestDto;
 import com.inuappcenter.team_2_project_server.domain.laboratory.dto.request.LaboratoryUpdateRequestDto;
+import com.inuappcenter.team_2_project_server.domain.laboratory.dto.request.ResearchProjectAssignRequestDto;
 import com.inuappcenter.team_2_project_server.domain.laboratory.dto.response.LabCountByCollegeResponseDto;
 import com.inuappcenter.team_2_project_server.domain.laboratory.dto.response.LaboratoryResponseDto;
 import com.inuappcenter.team_2_project_server.domain.laboratory.dto.response.PublicationResponseDto;
@@ -162,6 +163,36 @@ public class LaboratoryController implements LaboratoryApiSpecification {
         researchProjectSyncService.syncAll();
         return ResponseEntity.ok(
                 ResponseDto.of(null, "연구과제 전체 동기화 완료")
+        );
+    }
+
+    /**
+     * 연구실 매핑이 보류된 연구과제 목록 조회 컨트롤러 (관리자 전용)
+     */
+    @Override
+    @GetMapping("/research-projects/pending")
+    public ResponseEntity<ResponseDto<PageResponseDto<ResearchProjectResponseDto>>> getPendingResearchProjects(
+            @RequestParam(defaultValue = "0") int page
+    ) {
+        Pageable pageable = PageRequest.of(validatePage(page), 20, Sort.by(Sort.Direction.ASC, "managerName").and(Sort.by("id")));
+        Page<ResearchProjectResponseDto> result = laboratoryService.getPendingResearchProjects(pageable);
+        return ResponseEntity.ok(
+                ResponseDto.of(PageResponseDto.from(result), "매핑 보류 연구과제 목록 조회 성공")
+        );
+    }
+
+    /**
+     * 연구과제 연구실 수동 지정 컨트롤러 (관리자 전용)
+     */
+    @Override
+    @PatchMapping("/research-projects/{researchProjectId}/laboratory")
+    public ResponseEntity<ResponseDto<ResearchProjectResponseDto>> assignResearchProjectLaboratory(
+            @PathVariable Long researchProjectId,
+            @Valid @RequestBody ResearchProjectAssignRequestDto request
+    ) {
+        ResearchProjectResponseDto response = laboratoryService.assignResearchProjectLaboratory(researchProjectId, request.laboratoryId());
+        return ResponseEntity.ok(
+                ResponseDto.of(response, "연구과제 연구실 지정 완료")
         );
     }
 
