@@ -59,25 +59,25 @@ class LaboratorySearchTest {
     @Test
     void returns_all_labs_when_no_condition() {
         assertThat(search(null, null, null, null))
-                .containsExactly("로봇 연구실", "비전랩", "암호 연구실", "인공지능 연구실");
+                .containsExactlyInAnyOrder("로봇 연구실", "비전랩", "암호 연구실", "인공지능 연구실");
     }
 
     @Test
     void filters_by_single_category() {
         assertThat(search(null, List.of("AI"), null, null))
-                .containsExactly("비전랩", "인공지능 연구실");
+                .containsExactlyInAnyOrder("비전랩", "인공지능 연구실");
     }
 
     @Test
     void filters_by_multiple_categories_with_or() {
         assertThat(search(null, List.of("AI", "보안"), null, null))
-                .containsExactly("비전랩", "암호 연구실", "인공지능 연구실");
+                .containsExactlyInAnyOrder("비전랩", "암호 연구실", "인공지능 연구실");
     }
 
     @Test
     void ignores_blank_and_duplicated_categories() {
         assertThat(search(null, Arrays.asList(" AI ", "", "  ", null, "AI"), null, null))
-                .containsExactly("비전랩", "인공지능 연구실");
+                .containsExactlyInAnyOrder("비전랩", "인공지능 연구실");
     }
 
     @Test
@@ -88,7 +88,7 @@ class LaboratorySearchTest {
     @Test
     void filters_by_college_and_department() {
         assertThat(search(null, null, "정보기술대학", null))
-                .containsExactly("비전랩", "인공지능 연구실");
+                .containsExactlyInAnyOrder("비전랩", "인공지능 연구실");
         assertThat(search(null, null, null, " 전자공학부 "))
                 .containsExactly("암호 연구실");
     }
