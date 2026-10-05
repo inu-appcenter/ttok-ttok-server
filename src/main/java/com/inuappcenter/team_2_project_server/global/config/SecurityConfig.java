@@ -52,7 +52,7 @@ public class SecurityConfig {
                         .requestMatchers("/api/member/login", "/api/member/reissue").permitAll()
 
                         // 인증이 필요없는 API
-                        .requestMatchers(HttpMethod.GET, "/api/laboratory/**", "/api/college/**", "/api/research-metric/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/laboratory/**", "/api/college/**", "/api/research-metric/**", "/api/research-area-category/**").permitAll()
 
                         // 내 정보 조회는 로그인한 유저 본인이면 누구나 가능 (아래 관리자 전용 규칙보다 먼저 와야 함)
                         .requestMatchers(HttpMethod.GET, "/api/member/me").authenticated()
