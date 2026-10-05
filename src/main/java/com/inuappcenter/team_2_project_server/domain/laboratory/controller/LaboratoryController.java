@@ -109,29 +109,16 @@ public class LaboratoryController implements LaboratoryApiSpecification {
     @GetMapping("/search")
     public ResponseEntity<ResponseDto<PageResponseDto<LaboratoryResponseDto>>> searchLaboratory(
             @RequestParam(required = false) String keyword,
+            @RequestParam(required = false) List<String> category,
             @RequestParam(required = false) String college,
             @RequestParam(required = false) String department,
-            @RequestParam(required = false) String researchArea,
             @RequestParam(defaultValue = "0") int page
     ) {
         // 페이지를 넘겨도 순서가 바뀌지 않도록 이름순 + id로 정렬 고정
         Pageable pageable = PageRequest.of(validatePage(page), 20, Sort.by(Sort.Direction.ASC, "labName").and(Sort.by("id")));
-        Page<LaboratoryResponseDto> result = laboratoryService.searchLabs(keyword, college, department, researchArea, pageable);
+        Page<LaboratoryResponseDto> result = laboratoryService.searchLabs(keyword, category, college, department, pageable);
         return ResponseEntity.ok(
                 ResponseDto.of(PageResponseDto.from(result), "연구실 검색 성공")
-        );
-    }
-
-    @Override
-    @GetMapping("/search/category")
-    public ResponseEntity<ResponseDto<PageResponseDto<LaboratoryResponseDto>>> searchLaboratoryByCategory(
-            @RequestParam String categoryName,
-            @RequestParam(defaultValue = "0") int page
-    ) {
-        Pageable pageable = PageRequest.of(validatePage(page), 20);
-        Page<LaboratoryResponseDto> result = laboratoryService.searchLabsByCategory(categoryName, pageable);
-        return ResponseEntity.ok(
-                ResponseDto.of(PageResponseDto.from(result), "카테고리별 연구실 검색 성공")
         );
     }
 

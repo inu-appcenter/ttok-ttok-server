@@ -493,11 +493,15 @@ public interface LaboratoryApiSpecification {
     @Operation(
             summary = "연구실 검색",
             description = """
-                    검색어(연구실명/교수명), 단과대, 학과, 연구분야 조건을 조합해 연구실을 페이지 단위로 조회합니다.
+                    카테고리, 단과대, 학과로 범위를 좁히고, 그 안에서 검색어로 연구실을 찾아 페이지 단위로 조회합니다.
                     모든 조건은 선택값이며, 보내지 않은 조건은 '전체'로 처리합니다. (조건을 하나도 보내지 않으면 전체 연구실 조회)
+                    조건끼리는 AND로 결합되므로, 선택한 카테고리/단과대/학과에 속하지 않는 연구실은 검색어가 맞아도 조회되지 않습니다.
+                    - category 는 카테고리 조회 API 응답의 categoryName 값을 보내며, 여러 개 보낼 수 있습니다. (category=AI&category=보안)
+                      여러 개를 보내면 그중 하나라도 해당하는 연구실이 조회됩니다.
                     - 학과 드롭다운에서 특정 학과 선택 시 department, '단과대 전체' 선택 시 college 만 보냅니다.
                     - college/department 는 코드가 아닌 한글 이름으로 보냅니다. (단과대/학과 조회 API 응답의 collegeName, departmentName 값)
-                    - researchArea 는 세부 연구분야 이름으로 보내며, 이름이 정확히 일치하는 분야만 조회됩니다.
+                    - keyword 는 연구실명, 교수명, 학과명, 세부 연구분야명, 카테고리명 중 하나라도 포함하면 조회됩니다.
+                      대소문자와 공백은 무시합니다. ("인공지능 연구실" 과 "인공지능연구실" 은 같은 결과)
                     - 존재하지 않는 단과대/학과 이름이면 400(INVALID_INPUT)을 반환합니다.
                     page(0-based), 한 페이지당 20건으로 고정입니다.
                     """
@@ -556,96 +560,14 @@ public interface LaboratoryApiSpecification {
             )
     })
     ResponseEntity<ResponseDto<PageResponseDto<LaboratoryResponseDto>>> searchLaboratory(
-            @Parameter(description = "연구실명 또는 교수명 검색어 (선택)", example = "홍길동")
+            @Parameter(description = "연구실명/교수명/학과명/세부 연구분야명/카테고리명 검색어 (선택, 공백 무시 부분일치)", example = "홍길동")
             @RequestParam(required = false) String keyword,
+            @Parameter(description = "연구분야 카테고리 이름 (선택, 여러 개 가능: category=AI&category=보안)", example = "AI")
+            @RequestParam(required = false) List<String> category,
             @Parameter(description = "단과대 이름 (선택)", example = "공과대학")
             @RequestParam(required = false) String college,
             @Parameter(description = "학과 이름 (선택)", example = "전자공학부")
             @RequestParam(required = false) String department,
-            @Parameter(description = "세부 연구분야 이름 (선택)", example = "인공지능")
-            @RequestParam(required = false) String researchArea,
-            @Parameter(description = "0부터 시작하는 페이지 번호", example = "0")
-            @RequestParam(defaultValue = "0") int page
-    );
-
-    @Operation(
-            summary = "카테고리별 연구실 검색",
-            description = """
-                    상위 연구분야 카테고리명으로 검색하면, 그 카테고리에 속한 모든 하위 연구분야의 연구실을 페이지 단위로 조회합니다.
-                    page(0-based) 쿼리 파라미터만 사용하며, 한 페이지당 20건으로 고정입니다.
-                    """
-    )
-    @ApiResponses({
-            @ApiResponse(
-                    responseCode = "200",
-                    description = "카테고리별 연구실 검색 성공",
-                    content = @Content(
-                            mediaType = "application/json",
-                            schema = @Schema(implementation = ResponseDto.class),
-                            examples = @ExampleObject(value = """
-                                    {
-                                      "data": {
-                                        "content": [
-                                          {
-                                            "id": 1,
-                                            "college": "COLLEGE_OF_INFORMATION_TECHNOLOGY",
-                                            "collegeName": "정보기술대학",
-                                            "department": "COMPUTER_ENGINEERING",
-                                            "departmentName": "컴퓨터공학부",
-                                            "labName": "지능제어 및 기계학습 LAB",
-                                            "location": "7호관 401호",
-                                            "capacity": {
-                                              "graduateStudentCount": 6,
-                                              "undergraduateStudentCount": 7
-                                            },
-                                            "introduction": "강화학습과 머신러닝을 연구합니다.",
-                                            "professor": {
-                                              "id": 1,
-                                              "positionRaw": "교수",
-                                              "college": "COLLEGE_OF_INFORMATION_TECHNOLOGY",
-                                              "collegeName": "정보기술대학",
-                                              "department": "COMPUTER_ENGINEERING",
-                                              "departmentName": "컴퓨터공학부",
-                                              "name": "이명훈",
-                                              "phoneNumber": "032-835-0000",
-                                              "email": "professor@example.com"
-                                            },
-                                            "labUrl": "https://example.com/lab",
-                                            "researchAreas": ["강화학습 및 머신러닝"]
-                                          }
-                                        ],
-                                        "page": 0,
-                                        "size": 20,
-                                        "totalElements": 4,
-                                        "totalPages": 1,
-                                        "hasNext": false,
-                                        "last": true
-                                      },
-                                      "code": null,
-                                      "message": "카테고리별 연구실 검색 성공"
-                                    }
-                                    """)
-                    )
-            ),
-            @ApiResponse(
-                    responseCode = "400",
-                    description = "카테고리명이 비어 있음",
-                    content = @Content(
-                            mediaType = "application/json",
-                            schema = @Schema(implementation = ResponseDto.class),
-                            examples = @ExampleObject(value = """
-                                    {
-                                      "data": null,
-                                      "code": "NO_SEARCH_KEYWORD",
-                                      "message": "허용하지 않는 검색어입니다."
-                                    }
-                                    """)
-                    )
-            )
-    })
-    ResponseEntity<ResponseDto<PageResponseDto<LaboratoryResponseDto>>> searchLaboratoryByCategory(
-            @Parameter(description = "상위 연구분야 카테고리명", required = true, example = "AI")
-            @RequestParam String categoryName,
             @Parameter(description = "0부터 시작하는 페이지 번호", example = "0")
             @RequestParam(defaultValue = "0") int page
     );
