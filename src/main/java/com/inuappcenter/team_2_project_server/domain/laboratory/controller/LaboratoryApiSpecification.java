@@ -1,13 +1,13 @@
 package com.inuappcenter.team_2_project_server.domain.laboratory.controller;
 
+import com.inuappcenter.team_2_project_server.domain.labProject.dto.ResearchProjectAssignRequestDto;
+import com.inuappcenter.team_2_project_server.domain.labProject.dto.ResearchProjectResponseDto;
 import com.inuappcenter.team_2_project_server.domain.laboratory.dto.request.LaboratoryCreateRequestDto;
 import com.inuappcenter.team_2_project_server.domain.laboratory.dto.request.LaboratoryUpdateRequestDto;
-import com.inuappcenter.team_2_project_server.domain.laboratory.dto.request.ResearchProjectAssignRequestDto;
 import com.inuappcenter.team_2_project_server.domain.laboratory.dto.response.LabCountByCollegeResponseDto;
 import com.inuappcenter.team_2_project_server.domain.laboratory.dto.response.LaboratoryResponseDto;
-import com.inuappcenter.team_2_project_server.domain.laboratory.dto.response.PublicationResponseDto;
-import com.inuappcenter.team_2_project_server.domain.laboratory.dto.response.ResearchProjectResponseDto;
 import com.inuappcenter.team_2_project_server.domain.member.entity.Member;
+import com.inuappcenter.team_2_project_server.domain.publication.dto.PublicationResponseDto;
 import com.inuappcenter.team_2_project_server.global.dto.PageResponseDto;
 import com.inuappcenter.team_2_project_server.global.dto.ResponseDto;
 import io.swagger.v3.oas.annotations.Operation;

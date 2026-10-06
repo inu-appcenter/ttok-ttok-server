@@ -1,9 +1,9 @@
 package com.inuappcenter.team_2_project_server.domain.onboarding.service;
 
-import com.inuappcenter.team_2_project_server.domain.laboratory.dto.request.CoffeeChatCreateRequestDto;
-import com.inuappcenter.team_2_project_server.domain.laboratory.dto.request.LabReviewRequestDto;
-import com.inuappcenter.team_2_project_server.domain.laboratory.service.CoffeeChatService;
-import com.inuappcenter.team_2_project_server.domain.laboratory.service.LabReviewService;
+import com.inuappcenter.team_2_project_server.domain.coffeeChat.dto.CoffeeChatCreateRequestDto;
+import com.inuappcenter.team_2_project_server.domain.coffeeChat.service.CoffeeChatService;
+import com.inuappcenter.team_2_project_server.domain.labReview.dto.LabReviewRequestDto;
+import com.inuappcenter.team_2_project_server.domain.labReview.service.LabReviewService;
 import com.inuappcenter.team_2_project_server.domain.member.dto.response.MemberResponseDto;
 import com.inuappcenter.team_2_project_server.domain.member.entity.Member;
 import com.inuappcenter.team_2_project_server.domain.member.enums.UserType;

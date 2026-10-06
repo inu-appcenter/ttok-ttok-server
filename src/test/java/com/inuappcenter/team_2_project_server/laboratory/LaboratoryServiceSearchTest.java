@@ -2,12 +2,12 @@ package com.inuappcenter.team_2_project_server.laboratory;
 
 import com.inuappcenter.team_2_project_server.domain.department.enums.College;
 import com.inuappcenter.team_2_project_server.domain.department.enums.Department;
+import com.inuappcenter.team_2_project_server.domain.labProject.repository.ResearchProjectRepository;
 import com.inuappcenter.team_2_project_server.domain.laboratory.repository.LaboratoryRepository;
-import com.inuappcenter.team_2_project_server.domain.laboratory.repository.PublicationRepository;
-import com.inuappcenter.team_2_project_server.domain.laboratory.repository.ResearchProjectRepository;
 import com.inuappcenter.team_2_project_server.domain.laboratory.service.LaboratoryService;
 import com.inuappcenter.team_2_project_server.domain.member.service.ProfessorService;
 import com.inuappcenter.team_2_project_server.domain.member.service.ResearcherService;
+import com.inuappcenter.team_2_project_server.domain.publication.repository.PublicationRepository;
 import com.inuappcenter.team_2_project_server.global.error.ex.ErrorCode;
 import com.inuappcenter.team_2_project_server.global.error.ex.MyException;
 import org.junit.jupiter.api.BeforeEach;
@@ -20,21 +20,15 @@ import java.util.Arrays;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyBoolean;
-import static org.mockito.ArgumentMatchers.anyList;
-import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.BDDMockito.given;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.*;
 
 class LaboratoryServiceSearchTest {
 
+    private final Pageable pageable = PageRequest.of(0, 20);
     private LaboratoryRepository laboratoryRepository;
     private LaboratoryService laboratoryService;
-    private final Pageable pageable = PageRequest.of(0, 20);
 
     @BeforeEach
     void setUp() {
