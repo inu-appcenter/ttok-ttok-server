@@ -6,9 +6,8 @@ import com.inuappcenter.team_2_project_server.domain.labProject.entity.ResearchP
 import com.inuappcenter.team_2_project_server.domain.labProject.repository.ResearchProjectRepository;
 import com.inuappcenter.team_2_project_server.domain.laboratory.entity.Laboratory;
 import com.inuappcenter.team_2_project_server.domain.laboratory.repository.LaboratoryRepository;
-import com.inuappcenter.team_2_project_server.domain.laboratory.service.ResearchProjectOwnerResolver;
-import com.inuappcenter.team_2_project_server.domain.laboratory.service.ResearchProjectOwnerResolver.Candidate;
-import com.inuappcenter.team_2_project_server.domain.laboratory.service.ResearchProjectOwnerResolver.Decision;
+import com.inuappcenter.team_2_project_server.domain.labProject.service.ResearchProjectOwnerResolver.Candidate;
+import com.inuappcenter.team_2_project_server.domain.labProject.service.ResearchProjectOwnerResolver.Decision;
 import com.inuappcenter.team_2_project_server.domain.member.entity.Professor;
 import com.inuappcenter.team_2_project_server.domain.member.repository.ProfessorRepository;
 import lombok.RequiredArgsConstructor;

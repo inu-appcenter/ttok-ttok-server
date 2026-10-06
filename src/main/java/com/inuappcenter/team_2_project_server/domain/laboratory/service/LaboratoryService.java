@@ -2,9 +2,6 @@ package com.inuappcenter.team_2_project_server.domain.laboratory.service;
 
 import com.inuappcenter.team_2_project_server.domain.department.enums.College;
 import com.inuappcenter.team_2_project_server.domain.department.enums.Department;
-import com.inuappcenter.team_2_project_server.domain.labProject.dto.ResearchProjectResponseDto;
-import com.inuappcenter.team_2_project_server.domain.labProject.entity.ResearchProject;
-import com.inuappcenter.team_2_project_server.domain.labProject.repository.ResearchProjectRepository;
 import com.inuappcenter.team_2_project_server.domain.laboratory.dto.LabCollegeDeptCountRow;
 import com.inuappcenter.team_2_project_server.domain.laboratory.dto.request.LaboratoryCapacityUpdateRequestDto;
 import com.inuappcenter.team_2_project_server.domain.laboratory.dto.request.LaboratoryCreateRequestDto;
@@ -18,8 +15,6 @@ import com.inuappcenter.team_2_project_server.domain.member.entity.Member;
 import com.inuappcenter.team_2_project_server.domain.member.entity.Professor;
 import com.inuappcenter.team_2_project_server.domain.member.service.ProfessorService;
 import com.inuappcenter.team_2_project_server.domain.member.service.ResearcherService;
-import com.inuappcenter.team_2_project_server.domain.publication.dto.PublicationResponseDto;
-import com.inuappcenter.team_2_project_server.domain.publication.repository.PublicationRepository;
 import com.inuappcenter.team_2_project_server.global.error.ex.ErrorCode;
 import com.inuappcenter.team_2_project_server.global.error.ex.MyException;
 import lombok.RequiredArgsConstructor;
@@ -41,8 +36,6 @@ import java.util.stream.Collectors;
 public class LaboratoryService {
     private final LaboratoryRepository laboratoryRepository;
     private final ProfessorService professorService;
-    private final PublicationRepository publicationRepository;
-    private final ResearchProjectRepository researchProjectRepository;
     private final ResearcherService researcherService;
 
     /**
@@ -244,45 +237,6 @@ public class LaboratoryService {
         return value.replace("\\", "\\\\")
                 .replace("%", "\\%")
                 .replace("_", "\\_");
-    }
-
-    @Transactional(readOnly = true)
-    public Page<PublicationResponseDto> getLabPublications(Long laboratoryId, Pageable pageable) {
-        Laboratory laboratory = laboratoryRepository.findById(laboratoryId)
-                .orElseThrow(() -> new MyException(ErrorCode.LABORATORY_NOT_FOUND));
-
-        return publicationRepository.findByLaboratory(laboratory, pageable)
-                .map(PublicationResponseDto::from);
-    }
-
-    @Transactional(readOnly = true)
-    public Page<ResearchProjectResponseDto> getLabResearchProjects(Long laboratoryId, Pageable pageable) {
-        Laboratory laboratory = laboratoryRepository.findById(laboratoryId)
-                .orElseThrow(() -> new MyException(ErrorCode.LABORATORY_NOT_FOUND));
-
-        return researchProjectRepository.findByLaboratory(laboratory, pageable)
-                .map(ResearchProjectResponseDto::from);
-    }
-
-    // 동명이인 교수의 과제라 동기화 배치가 연구실 매핑을 보류한 과제 목록 (관리자 전용)
-    @Transactional(readOnly = true)
-    public Page<ResearchProjectResponseDto> getPendingResearchProjects(Pageable pageable) {
-        return researchProjectRepository.findByLaboratoryIsNull(pageable)
-                .map(ResearchProjectResponseDto::from);
-    }
-
-    /**
-     * 관리자가 연구과제의 연구실을 직접 지정하는 메서드
-     * 매핑이 보류됐거나 잘못 매핑된 과제를 바로잡을 때 사용 (이후 동기화 배치의 자동 매핑이 덮어쓰지 않음)
-     */
-    public ResearchProjectResponseDto assignResearchProjectLaboratory(Long researchProjectId, Long laboratoryId) {
-        ResearchProject researchProject = researchProjectRepository.findById(researchProjectId)
-                .orElseThrow(() -> new MyException(ErrorCode.RESEARCH_PROJECT_NOT_FOUND));
-        Laboratory laboratory = laboratoryRepository.findById(laboratoryId)
-                .orElseThrow(() -> new MyException(ErrorCode.LABORATORY_NOT_FOUND));
-
-        researchProject.assignLaboratoryManually(laboratory);
-        return ResearchProjectResponseDto.from(researchProject);
     }
 
     /**

@@ -1,8 +1,5 @@
 package com.inuappcenter.team_2_project_server.domain.laboratory.controller;
 
-import com.inuappcenter.team_2_project_server.domain.labProject.dto.ResearchProjectAssignRequestDto;
-import com.inuappcenter.team_2_project_server.domain.labProject.dto.ResearchProjectResponseDto;
-import com.inuappcenter.team_2_project_server.domain.labProject.service.ResearchProjectSyncService;
 import com.inuappcenter.team_2_project_server.domain.laboratory.dto.request.LaboratoryCreateRequestDto;
 import com.inuappcenter.team_2_project_server.domain.laboratory.dto.request.LaboratoryUpdateRequestDto;
 import com.inuappcenter.team_2_project_server.domain.laboratory.dto.response.LabCountByCollegeResponseDto;
@@ -10,7 +7,6 @@ import com.inuappcenter.team_2_project_server.domain.laboratory.dto.response.Lab
 import com.inuappcenter.team_2_project_server.domain.laboratory.service.LaboratoryExcelImportService;
 import com.inuappcenter.team_2_project_server.domain.laboratory.service.LaboratoryService;
 import com.inuappcenter.team_2_project_server.domain.member.entity.Member;
-import com.inuappcenter.team_2_project_server.domain.publication.dto.PublicationResponseDto;
 import com.inuappcenter.team_2_project_server.global.dto.PageResponseDto;
 import com.inuappcenter.team_2_project_server.global.dto.ResponseDto;
 import com.inuappcenter.team_2_project_server.global.error.ex.ErrorCode;
@@ -35,7 +31,6 @@ import java.util.List;
 public class LaboratoryController implements LaboratoryApiSpecification {
     private final LaboratoryExcelImportService laboratoryExcelImportService;
     private final LaboratoryService laboratoryService;
-    private final ResearchProjectSyncService researchProjectSyncService;
 
     @Override
     @PostMapping(value = "/import", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
@@ -120,79 +115,6 @@ public class LaboratoryController implements LaboratoryApiSpecification {
         Page<LaboratoryResponseDto> result = laboratoryService.searchLabs(keyword, category, college, department, pageable);
         return ResponseEntity.ok(
                 ResponseDto.of(PageResponseDto.from(result), "연구실 검색 성공")
-        );
-    }
-
-    @Override
-    @GetMapping("/{laboratoryId}/publications")
-    public ResponseEntity<ResponseDto<PageResponseDto<PublicationResponseDto>>> getPublications(
-            @PathVariable Long laboratoryId,
-            @RequestParam(defaultValue = "0") int page
-    ) {
-        Pageable pageable = PageRequest.of(validatePage(page), 5, Sort.by(Sort.Direction.DESC, "year"));
-        Page<PublicationResponseDto> result = laboratoryService.getLabPublications(laboratoryId, pageable);
-        return ResponseEntity.ok(
-                ResponseDto.of(PageResponseDto.from(result), "연구실 논문 목록 조회 성공")
-        );
-    }
-
-    /**
-     * 연구과제 조회 컨트롤러
-     */
-    @Override
-    @GetMapping("/{laboratoryId}/research-projects")
-    public ResponseEntity<ResponseDto<PageResponseDto<ResearchProjectResponseDto>>> getResearchProjects(
-            @PathVariable Long laboratoryId,
-            @RequestParam(defaultValue = "0") int page
-    ) {
-        Pageable pageable = PageRequest.of(
-                validatePage(page), 5, Sort.by(Sort.Direction.DESC, "ongoing").and(Sort.by(Sort.Direction.DESC, "projectYear"))
-        );
-        Page<ResearchProjectResponseDto> result = laboratoryService.getLabResearchProjects(laboratoryId, pageable);
-        return ResponseEntity.ok(
-                ResponseDto.of(PageResponseDto.from(result), "연구실 연구과제 목록 조회 성공")
-        );
-    }
-
-    /**
-     * 전체 연구실 연구과제 수동 동기화 컨트롤러 (관리자 전용, 매일 새벽 배치와 별개로 지금 바로 실행)
-     */
-    @Override
-    @PostMapping("/research-projects/sync")
-    public ResponseEntity<ResponseDto<Void>> syncAllResearchProjects() {
-        researchProjectSyncService.syncAll();
-        return ResponseEntity.ok(
-                ResponseDto.of(null, "연구과제 전체 동기화 완료")
-        );
-    }
-
-    /**
-     * 연구실 매핑이 보류된 연구과제 목록 조회 컨트롤러 (관리자 전용)
-     */
-    @Override
-    @GetMapping("/research-projects/pending")
-    public ResponseEntity<ResponseDto<PageResponseDto<ResearchProjectResponseDto>>> getPendingResearchProjects(
-            @RequestParam(defaultValue = "0") int page
-    ) {
-        Pageable pageable = PageRequest.of(validatePage(page), 20, Sort.by(Sort.Direction.ASC, "managerName").and(Sort.by("id")));
-        Page<ResearchProjectResponseDto> result = laboratoryService.getPendingResearchProjects(pageable);
-        return ResponseEntity.ok(
-                ResponseDto.of(PageResponseDto.from(result), "매핑 보류 연구과제 목록 조회 성공")
-        );
-    }
-
-    /**
-     * 연구과제 연구실 수동 지정 컨트롤러 (관리자 전용)
-     */
-    @Override
-    @PatchMapping("/research-projects/{researchProjectId}/laboratory")
-    public ResponseEntity<ResponseDto<ResearchProjectResponseDto>> assignResearchProjectLaboratory(
-            @PathVariable Long researchProjectId,
-            @Valid @RequestBody ResearchProjectAssignRequestDto request
-    ) {
-        ResearchProjectResponseDto response = laboratoryService.assignResearchProjectLaboratory(researchProjectId, request.laboratoryId());
-        return ResponseEntity.ok(
-                ResponseDto.of(response, "연구과제 연구실 지정 완료")
         );
     }
 

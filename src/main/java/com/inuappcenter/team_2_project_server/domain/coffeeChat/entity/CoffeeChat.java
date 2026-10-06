@@ -1,7 +1,7 @@
 package com.inuappcenter.team_2_project_server.domain.coffeeChat.entity;
 
 import com.inuappcenter.team_2_project_server.domain.laboratory.entity.Laboratory;
-import com.inuappcenter.team_2_project_server.domain.laboratory.enums.ContactType;
+import com.inuappcenter.team_2_project_server.domain.coffeeChat.enums.ContactType;
 import com.inuappcenter.team_2_project_server.domain.member.entity.Researcher;
 import com.inuappcenter.team_2_project_server.global.entity.BaseEntity;
 import jakarta.persistence.*;

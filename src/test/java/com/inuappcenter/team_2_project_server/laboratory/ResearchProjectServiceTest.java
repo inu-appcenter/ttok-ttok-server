@@ -5,10 +5,7 @@ import com.inuappcenter.team_2_project_server.domain.labProject.entity.ResearchP
 import com.inuappcenter.team_2_project_server.domain.labProject.repository.ResearchProjectRepository;
 import com.inuappcenter.team_2_project_server.domain.laboratory.entity.Laboratory;
 import com.inuappcenter.team_2_project_server.domain.laboratory.repository.LaboratoryRepository;
-import com.inuappcenter.team_2_project_server.domain.laboratory.service.LaboratoryService;
-import com.inuappcenter.team_2_project_server.domain.member.service.ProfessorService;
-import com.inuappcenter.team_2_project_server.domain.member.service.ResearcherService;
-import com.inuappcenter.team_2_project_server.domain.publication.repository.PublicationRepository;
+import com.inuappcenter.team_2_project_server.domain.labProject.service.ResearchProjectService;
 import com.inuappcenter.team_2_project_server.global.error.ex.ErrorCode;
 import com.inuappcenter.team_2_project_server.global.error.ex.MyException;
 import org.junit.jupiter.api.BeforeEach;
@@ -26,23 +23,17 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.mock;
 
-class LaboratoryServiceResearchProjectTest {
+class ResearchProjectServiceTest {
 
     private LaboratoryRepository laboratoryRepository;
     private ResearchProjectRepository researchProjectRepository;
-    private LaboratoryService laboratoryService;
+    private ResearchProjectService researchProjectService;
 
     @BeforeEach
     void setUp() {
         laboratoryRepository = mock(LaboratoryRepository.class);
         researchProjectRepository = mock(ResearchProjectRepository.class);
-        laboratoryService = new LaboratoryService(
-                laboratoryRepository,
-                mock(ProfessorService.class),
-                mock(PublicationRepository.class),
-                researchProjectRepository,
-                mock(ResearcherService.class)
-        );
+        researchProjectService = new ResearchProjectService(laboratoryRepository, researchProjectRepository);
     }
 
     @Test
@@ -51,7 +42,7 @@ class LaboratoryServiceResearchProjectTest {
         given(researchProjectRepository.findByLaboratoryIsNull(pageable))
                 .willReturn(new PageImpl<>(List.of(project(null)), pageable, 1));
 
-        Page<ResearchProjectResponseDto> result = laboratoryService.getPendingResearchProjects(pageable);
+        Page<ResearchProjectResponseDto> result = researchProjectService.getPendingResearchProjects(pageable);
 
         assertThat(result.getContent()).extracting(ResearchProjectResponseDto::projectNumber).containsExactly("1711041912");
     }
@@ -63,7 +54,7 @@ class LaboratoryServiceResearchProjectTest {
         given(researchProjectRepository.findById(1L)).willReturn(Optional.of(project));
         given(laboratoryRepository.findById(10L)).willReturn(Optional.of(laboratory));
 
-        ResearchProjectResponseDto response = laboratoryService.assignResearchProjectLaboratory(1L, 10L);
+        ResearchProjectResponseDto response = researchProjectService.assignResearchProjectLaboratory(1L, 10L);
 
         assertThat(response.projectNumber()).isEqualTo("1711041912");
         assertThat(project.getLaboratory()).isEqualTo(laboratory);
@@ -74,7 +65,7 @@ class LaboratoryServiceResearchProjectTest {
     void throws_when_research_project_does_not_exist() {
         given(researchProjectRepository.findById(1L)).willReturn(Optional.empty());
 
-        assertThatThrownBy(() -> laboratoryService.assignResearchProjectLaboratory(1L, 10L))
+        assertThatThrownBy(() -> researchProjectService.assignResearchProjectLaboratory(1L, 10L))
                 .isInstanceOf(MyException.class)
                 .extracting("errorCode")
                 .isEqualTo(ErrorCode.RESEARCH_PROJECT_NOT_FOUND);
@@ -86,7 +77,7 @@ class LaboratoryServiceResearchProjectTest {
         given(researchProjectRepository.findById(1L)).willReturn(Optional.of(project));
         given(laboratoryRepository.findById(10L)).willReturn(Optional.empty());
 
-        assertThatThrownBy(() -> laboratoryService.assignResearchProjectLaboratory(1L, 10L))
+        assertThatThrownBy(() -> researchProjectService.assignResearchProjectLaboratory(1L, 10L))
                 .isInstanceOf(MyException.class)
                 .extracting("errorCode")
                 .isEqualTo(ErrorCode.LABORATORY_NOT_FOUND);

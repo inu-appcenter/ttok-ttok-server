@@ -2,12 +2,10 @@ package com.inuappcenter.team_2_project_server.laboratory;
 
 import com.inuappcenter.team_2_project_server.domain.department.enums.College;
 import com.inuappcenter.team_2_project_server.domain.department.enums.Department;
-import com.inuappcenter.team_2_project_server.domain.labProject.repository.ResearchProjectRepository;
 import com.inuappcenter.team_2_project_server.domain.laboratory.repository.LaboratoryRepository;
 import com.inuappcenter.team_2_project_server.domain.laboratory.service.LaboratoryService;
 import com.inuappcenter.team_2_project_server.domain.member.service.ProfessorService;
 import com.inuappcenter.team_2_project_server.domain.member.service.ResearcherService;
-import com.inuappcenter.team_2_project_server.domain.publication.repository.PublicationRepository;
 import com.inuappcenter.team_2_project_server.global.error.ex.ErrorCode;
 import com.inuappcenter.team_2_project_server.global.error.ex.MyException;
 import org.junit.jupiter.api.BeforeEach;
@@ -36,8 +34,6 @@ class LaboratoryServiceSearchTest {
         laboratoryService = new LaboratoryService(
                 laboratoryRepository,
                 mock(ProfessorService.class),
-                mock(PublicationRepository.class),
-                mock(ResearchProjectRepository.class),
                 mock(ResearcherService.class)
         );
         given(laboratoryRepository.searchByFilter(anyBoolean(), anyList(), any(), any(), anyString(), anyList(), any()))

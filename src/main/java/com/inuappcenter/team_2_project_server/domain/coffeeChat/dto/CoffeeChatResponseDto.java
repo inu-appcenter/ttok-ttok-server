@@ -1,7 +1,7 @@
 package com.inuappcenter.team_2_project_server.domain.coffeeChat.dto;
 
 import com.inuappcenter.team_2_project_server.domain.coffeeChat.entity.CoffeeChat;
-import com.inuappcenter.team_2_project_server.domain.laboratory.enums.ContactType;
+import com.inuappcenter.team_2_project_server.domain.coffeeChat.enums.ContactType;
 
 public record CoffeeChatResponseDto(
         Long id,

@@ -1,6 +1,6 @@
 package com.inuappcenter.team_2_project_server.domain.coffeeChat.dto;
 
-import com.inuappcenter.team_2_project_server.domain.laboratory.enums.ContactType;
+import com.inuappcenter.team_2_project_server.domain.coffeeChat.enums.ContactType;
 import jakarta.validation.constraints.AssertTrue;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
