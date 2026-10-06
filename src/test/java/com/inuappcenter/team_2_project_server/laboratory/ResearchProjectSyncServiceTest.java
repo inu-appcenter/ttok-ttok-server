@@ -1,13 +1,13 @@
 package com.inuappcenter.team_2_project_server.laboratory;
 
 import com.inuappcenter.team_2_project_server.domain.department.enums.Department;
-import com.inuappcenter.team_2_project_server.domain.laboratory.client.NtisClient;
-import com.inuappcenter.team_2_project_server.domain.laboratory.dto.NtisProjectSearchResponse;
+import com.inuappcenter.team_2_project_server.domain.labProject.client.NtisClient;
+import com.inuappcenter.team_2_project_server.domain.labProject.dto.NtisProjectSearchResponse;
+import com.inuappcenter.team_2_project_server.domain.labProject.entity.ResearchProject;
+import com.inuappcenter.team_2_project_server.domain.labProject.repository.ResearchProjectRepository;
+import com.inuappcenter.team_2_project_server.domain.labProject.service.ResearchProjectSyncService;
 import com.inuappcenter.team_2_project_server.domain.laboratory.entity.Laboratory;
-import com.inuappcenter.team_2_project_server.domain.laboratory.entity.ResearchProject;
 import com.inuappcenter.team_2_project_server.domain.laboratory.repository.LaboratoryRepository;
-import com.inuappcenter.team_2_project_server.domain.laboratory.repository.ResearchProjectRepository;
-import com.inuappcenter.team_2_project_server.domain.laboratory.service.ResearchProjectSyncService;
 import com.inuappcenter.team_2_project_server.domain.member.entity.Professor;
 import com.inuappcenter.team_2_project_server.domain.member.repository.ProfessorRepository;
 import org.junit.jupiter.api.BeforeEach;
@@ -17,39 +17,26 @@ import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.support.TransactionTemplate;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyBoolean;
-import static org.mockito.ArgumentMatchers.anyInt;
-import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.BDDMockito.given;
-import static org.mockito.Mockito.atLeastOnce;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.*;
 
 class ResearchProjectSyncServiceTest {
 
     private static final String FUTURE = "2099-12-31 00:00:00.0";
     private static final String PAST = "2000-01-01 00:00:00.0";
-
+    private final List<Laboratory> laboratories = new ArrayList<>();
+    private final List<Professor> professors = new ArrayList<>();
     private LaboratoryRepository laboratoryRepository;
     private ProfessorRepository professorRepository;
     private ResearchProjectRepository researchProjectRepository;
     private NtisClient ntisClient;
     private ResearchProjectSyncService researchProjectSyncService;
-
-    private final List<Laboratory> laboratories = new ArrayList<>();
-    private final List<Professor> professors = new ArrayList<>();
     private long nextId = 1;
 
     @BeforeEach

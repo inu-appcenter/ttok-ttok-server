@@ -1,8 +1,8 @@
 package com.inuappcenter.team_2_project_server.domain.researchMetric.service;
 
 import com.inuappcenter.team_2_project_server.domain.laboratory.repository.LaboratoryRepository;
-import com.inuappcenter.team_2_project_server.domain.laboratory.repository.PublicationRepository;
 import com.inuappcenter.team_2_project_server.domain.member.entity.Professor;
+import com.inuappcenter.team_2_project_server.domain.publication.repository.PublicationRepository;
 import com.inuappcenter.team_2_project_server.domain.researchMetric.client.OpenAlexClient;
 import com.inuappcenter.team_2_project_server.domain.researchMetric.dto.OpenAlexWorkResponse;
 import com.inuappcenter.team_2_project_server.domain.researchMetric.entity.ResearchMetric;
@@ -14,24 +14,20 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
  * OpenAlex에서 교수별 연구 지표(h-index, 피인용 수)를 받아와 DB에 저장한다.
  * 연구실 상세페이지는 이 배치가 저장해둔 값만 읽고, 요청마다 OpenAlex를 직접 호출하지 않는다.
- *
+ * <p>
  * 교수 ↔ OpenAlex 저자 매칭 방식
  * - 이름만으로 검색하면 영문 표기 차이, 동명이인 때문에 부정확하므로 "교수의 논문"으로 후보를 좁힌다
  * - 교수의 최근 논문 DOI들로 OpenAlex 논문을 조회하고, 저자별로 몇 편에 등장하는지 집계한다
- *   (교수 본인은 자기 논문 전부에 저자로 들어가 있으므로 가장 많이 등장한다)
+ * (교수 본인은 자기 논문 전부에 저자로 들어가 있으므로 가장 많이 등장한다)
  * - 자주 등장하는 공저자(학생, 동료 교수)를 교수로 잘못 고르지 않도록 성씨가 일치하는 저자를 우선한다
- *   - 성씨가 일치하는 저자가 있으면: 그중 가장 많이 등장한 저자 (동률이면 인천대 소속으로 등장한 횟수로 비교)
- *   - 없으면(외국인 교수, 특이한 영문 표기 등): 인천대 소속으로 가장 많이 등장한 저자
+ * - 성씨가 일치하는 저자가 있으면: 그중 가장 많이 등장한 저자 (동률이면 인천대 소속으로 등장한 횟수로 비교)
+ * - 없으면(외국인 교수, 특이한 영문 표기 등): 인천대 소속으로 가장 많이 등장한 저자
  * - 오매칭을 막기 위해 2편 이상에서 등장하고 2위보다 확실히 앞선 경우에만 매칭한다 (동률이면 관리자가 직접 지정)
  * - 매칭에만 소속/이름을 쓰고, 지표는 OpenAlex 저자 프로필 기준이라 인천대 이전 경력 논문까지 모두 포함된다
  */
@@ -73,6 +69,7 @@ public class ResearchMetricSyncService {
 
     /**
      * 교수 한 명의 지표를 동기화한다. 아직 저자 매칭이 안 됐으면 매칭부터 시도한다.
+     *
      * @return 저자 매칭이 되어 있는지 여부
      */
     public boolean syncOne(Professor professor) {
@@ -155,6 +152,13 @@ public class ResearchMetricSyncService {
         return Optional.of(OpenAlexClient.toShortId(top.id));
     }
 
+    private boolean isInuAffiliated(OpenAlexWorkResponse.Authorship authorship) {
+        return authorship.author() != null
+                && authorship.author().id() != null
+                && authorship.institutionsOrEmpty().stream()
+                .anyMatch(institution -> OpenAlexClient.INU_INSTITUTION_ID.equals(institution.id()));
+    }
+
     // 매칭 후보 저자: 교수 논문에 등장한 횟수(works), 그중 인천대 소속으로 등장한 횟수(inuWorks)
     private static final class AuthorCandidate {
         private final String id;
@@ -178,12 +182,5 @@ public class ResearchMetricSyncService {
         public String toString() {
             return OpenAlexClient.toShortId(id) + "(" + displayName + ", " + works + "편, 인천대 " + inuWorks + "편)";
         }
-    }
-
-    private boolean isInuAffiliated(OpenAlexWorkResponse.Authorship authorship) {
-        return authorship.author() != null
-                && authorship.author().id() != null
-                && authorship.institutionsOrEmpty().stream()
-                .anyMatch(institution -> OpenAlexClient.INU_INSTITUTION_ID.equals(institution.id()));
     }
 }

@@ -1,6 +1,6 @@
 package com.inuappcenter.team_2_project_server.laboratory;
 
-import com.inuappcenter.team_2_project_server.domain.laboratory.entity.LabReview;
+import com.inuappcenter.team_2_project_server.domain.labReview.entity.LabReview;
 import org.junit.jupiter.api.Test;
 
 import java.text.Normalizer;

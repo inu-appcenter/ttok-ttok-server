@@ -1,12 +1,12 @@
 package com.inuappcenter.team_2_project_server.laboratory;
 
-import com.inuappcenter.team_2_project_server.domain.laboratory.dto.request.LabReviewRequestDto;
-import com.inuappcenter.team_2_project_server.domain.laboratory.dto.response.LabReviewOptionsResponseDto;
-import com.inuappcenter.team_2_project_server.domain.laboratory.dto.response.LabReviewResponseDto;
-import com.inuappcenter.team_2_project_server.domain.laboratory.entity.LabReview;
+import com.inuappcenter.team_2_project_server.domain.labReview.dto.LabReviewOptionsResponseDto;
+import com.inuappcenter.team_2_project_server.domain.labReview.dto.LabReviewRequestDto;
+import com.inuappcenter.team_2_project_server.domain.labReview.dto.LabReviewResponseDto;
+import com.inuappcenter.team_2_project_server.domain.labReview.entity.LabReview;
+import com.inuappcenter.team_2_project_server.domain.labReview.repository.LabReviewRepository;
+import com.inuappcenter.team_2_project_server.domain.labReview.service.LabReviewService;
 import com.inuappcenter.team_2_project_server.domain.laboratory.entity.Laboratory;
-import com.inuappcenter.team_2_project_server.domain.laboratory.repository.LabReviewRepository;
-import com.inuappcenter.team_2_project_server.domain.laboratory.service.LabReviewService;
 import com.inuappcenter.team_2_project_server.domain.member.entity.Researcher;
 import com.inuappcenter.team_2_project_server.domain.member.repository.ResearcherRepository;
 import com.inuappcenter.team_2_project_server.global.error.ex.ErrorCode;
@@ -15,19 +15,13 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.dao.DataIntegrityViolationException;
 
-import java.util.Arrays;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.*;
 
 class LabReviewServiceTest {
 
@@ -37,6 +31,10 @@ class LabReviewServiceTest {
 
     private Laboratory laboratory;
     private Researcher researcher;
+
+    private static Set<String> set(String... values) {
+        return new LinkedHashSet<>(Arrays.asList(values));
+    }
 
     @BeforeEach
     void setUp() {
@@ -55,10 +53,6 @@ class LabReviewServiceTest {
 
     private LabReviewRequestDto request(String coreTime, String weeklyMeeting, String... doings) {
         return new LabReviewRequestDto(coreTime, weeklyMeeting, set(doings));
-    }
-
-    private static Set<String> set(String... values) {
-        return new LinkedHashSet<>(Arrays.asList(values));
     }
 
     @Test

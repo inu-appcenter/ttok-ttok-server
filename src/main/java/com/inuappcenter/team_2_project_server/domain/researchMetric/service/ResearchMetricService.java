@@ -2,9 +2,9 @@ package com.inuappcenter.team_2_project_server.domain.researchMetric.service;
 
 import com.inuappcenter.team_2_project_server.domain.laboratory.entity.Laboratory;
 import com.inuappcenter.team_2_project_server.domain.laboratory.repository.LaboratoryRepository;
-import com.inuappcenter.team_2_project_server.domain.laboratory.repository.PublicationRepository;
 import com.inuappcenter.team_2_project_server.domain.member.entity.Professor;
 import com.inuappcenter.team_2_project_server.domain.member.repository.ProfessorRepository;
+import com.inuappcenter.team_2_project_server.domain.publication.repository.PublicationRepository;
 import com.inuappcenter.team_2_project_server.domain.researchMetric.client.OpenAlexClient;
 import com.inuappcenter.team_2_project_server.domain.researchMetric.dto.response.ResearchMetricResponseDto;
 import com.inuappcenter.team_2_project_server.domain.researchMetric.entity.ResearchMetric;

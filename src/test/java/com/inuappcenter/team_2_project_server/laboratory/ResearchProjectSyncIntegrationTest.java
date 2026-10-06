@@ -1,13 +1,13 @@
 package com.inuappcenter.team_2_project_server.laboratory;
 
 import com.inuappcenter.team_2_project_server.domain.department.enums.Department;
-import com.inuappcenter.team_2_project_server.domain.laboratory.client.NtisClient;
-import com.inuappcenter.team_2_project_server.domain.laboratory.dto.NtisProjectSearchResponse;
+import com.inuappcenter.team_2_project_server.domain.labProject.client.NtisClient;
+import com.inuappcenter.team_2_project_server.domain.labProject.dto.NtisProjectSearchResponse;
+import com.inuappcenter.team_2_project_server.domain.labProject.entity.ResearchProject;
+import com.inuappcenter.team_2_project_server.domain.labProject.repository.ResearchProjectRepository;
+import com.inuappcenter.team_2_project_server.domain.labProject.service.ResearchProjectSyncService;
 import com.inuappcenter.team_2_project_server.domain.laboratory.entity.Laboratory;
-import com.inuappcenter.team_2_project_server.domain.laboratory.entity.ResearchProject;
 import com.inuappcenter.team_2_project_server.domain.laboratory.repository.LaboratoryRepository;
-import com.inuappcenter.team_2_project_server.domain.laboratory.repository.ResearchProjectRepository;
-import com.inuappcenter.team_2_project_server.domain.laboratory.service.ResearchProjectSyncService;
 import com.inuappcenter.team_2_project_server.domain.member.entity.Professor;
 import com.inuappcenter.team_2_project_server.domain.member.repository.ProfessorRepository;
 import org.junit.jupiter.api.AfterEach;
@@ -22,9 +22,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.ArgumentMatchers.anyInt;
-import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.BDDMockito.given;
 
 /**
@@ -38,24 +36,18 @@ class ResearchProjectSyncIntegrationTest {
 
     private static final String FUTURE = "2099-12-31 00:00:00.0";
     private static final String PAST = "2000-01-01 00:00:00.0";
-
-    @Autowired
-    private ResearchProjectSyncService researchProjectSyncService;
-
-    @Autowired
-    private ResearchProjectRepository researchProjectRepository;
-
-    @Autowired
-    private LaboratoryRepository laboratoryRepository;
-
-    @Autowired
-    private ProfessorRepository professorRepository;
-
-    @MockitoBean
-    private NtisClient ntisClient;
-
     private final List<Laboratory> laboratories = new ArrayList<>();
     private final List<Professor> professors = new ArrayList<>();
+    @Autowired
+    private ResearchProjectSyncService researchProjectSyncService;
+    @Autowired
+    private ResearchProjectRepository researchProjectRepository;
+    @Autowired
+    private LaboratoryRepository laboratoryRepository;
+    @Autowired
+    private ProfessorRepository professorRepository;
+    @MockitoBean
+    private NtisClient ntisClient;
 
     @AfterEach
     void tearDown() {
