@@ -62,8 +62,7 @@ public class SecurityConfig {
 
                         // 관리자 전용
                         .requestMatchers(HttpMethod.GET, "/api/member", "/api/member/**").hasRole("ADMIN")
-                        .requestMatchers(HttpMethod.POST, "/api/laboratory/import", "/api/laboratory/research-projects/sync").hasRole("ADMIN")
-                        .requestMatchers(HttpMethod.POST, "/api/research-metric/sync").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.POST, "/api/laboratory/import", "/api/laboratory/research-projects/sync", "/api/recommendation/index/sync", "/api/research-metric/sync").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.PATCH, "/api/research-metric/professor/*/author", "/api/laboratory/research-projects/*/laboratory").hasRole("ADMIN")
 
                         // 오류 제보: 생성(POST)은 로그인 유저 누구나, 조회/삭제는 관리자만
