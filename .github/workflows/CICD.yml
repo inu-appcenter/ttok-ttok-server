@@ -14,9 +14,10 @@ jobs:
     runs-on: ubuntu-latest
     # @SpringBootTest가 실제 DB 연결을 필요로 해서, 테스트 동안만 쓰고 버릴 Postgres를 띄움
     # application-test.yml의 spring.datasource 값과 반드시 일치해야 함
+    # 연구실 추천 검색에 vector 타입이 필요해서 pgvector가 포함된 이미지를 쓴다 (운영 DB와 같은 PostgreSQL 14)
     services:
       postgres:
-        image: postgres:16
+        image: pgvector/pgvector:pg14
         env:
           POSTGRES_DB: ttok_ttok_test
           POSTGRES_USER: test

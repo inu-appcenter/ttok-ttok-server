@@ -39,6 +39,7 @@ dependencies {
     implementation 'org.apache.poi:poi-ooxml:5.4.1' // 엑셀 파싱을 위한 의존성
     implementation 'org.springframework.boot:spring-boot-starter-webflux' // 웹 클라이언트 의존성(AI API 호출에 사용)
     implementation 'com.fasterxml.jackson.dataformat:jackson-dataformat-xml' // NTIS 국가R&D 과제검색 API가 XML로 응답해서 필요
+    implementation 'org.hibernate.orm:hibernate-vector' // 연구실 추천 검색: pgvector의 vector 타입을 float[]로 매핑
 }
 
 tasks.named('test') {
