@@ -10,6 +10,12 @@ spring:
   jpa:
     hibernate:
       ddl-auto: create-drop
+  # 테이블을 만들기 전에 pgvector 확장을 켠다 (lab_search_document의 vector 컬럼에 필요)
+  # DB 이미지에 pgvector가 설치만 되어 있고, DB마다 CREATE EXTENSION을 한 번 해야 쓸 수 있다
+  sql:
+    init:
+      mode: always
+      schema-locations: classpath:sql/pgvector-extension.sql
 
 jwt:
   secret: "test-jwt-secret-key-must-be-long-enough-for-hs256-tests"
@@ -20,7 +26,6 @@ jwt:
 ai:
   base-url: http://localhost
   api-key: test-ai-api-key
-  research-lab-chatbot-id: "0"
   email-editor-chatbot-id: "0"
 
 ntis:
