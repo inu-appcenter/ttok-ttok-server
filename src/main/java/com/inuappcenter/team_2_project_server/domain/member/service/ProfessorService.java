@@ -39,6 +39,13 @@ public class ProfessorService {
     }
 
     /**
+     * 로그인한 계정(memberId)과 연동된 교수를 조회. 연동 안 된 계정이면 비어 있는 Optional (내 정보 조회처럼 없어도 되는 경우용)
+     */
+    public Optional<Professor> findByMemberId(Long memberId) {
+        return professorRepository.findByMemberId(memberId);
+    }
+
+    /**
      * 단과대·학과·이름·이메일로 교수 조회
      */
     public Professor getByDepartmentAndNameAndEmail(Department department, String name, String email) {

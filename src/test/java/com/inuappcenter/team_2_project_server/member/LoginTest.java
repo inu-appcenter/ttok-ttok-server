@@ -6,11 +6,13 @@ import com.inuappcenter.team_2_project_server.domain.member.dto.response.LoginRe
 import com.inuappcenter.team_2_project_server.domain.member.entity.Member;
 import com.inuappcenter.team_2_project_server.domain.member.repository.MemberRepository;
 import com.inuappcenter.team_2_project_server.domain.member.repository.SchoolAuthRepository;
+import com.inuappcenter.team_2_project_server.domain.bookmark.service.BookmarkService;
 import com.inuappcenter.team_2_project_server.domain.coffeeChat.service.CoffeeChatService;
 import com.inuappcenter.team_2_project_server.domain.labReview.service.LabReviewService;
 import com.inuappcenter.team_2_project_server.domain.laboratory.service.LaboratoryService;
 import com.inuappcenter.team_2_project_server.domain.member.service.JwtTokenProvider;
 import com.inuappcenter.team_2_project_server.domain.member.service.MemberService;
+import com.inuappcenter.team_2_project_server.domain.member.service.ProfessorService;
 import com.inuappcenter.team_2_project_server.domain.member.service.ResearcherService;
 import com.inuappcenter.team_2_project_server.global.error.ex.ErrorCode;
 import com.inuappcenter.team_2_project_server.global.error.ex.MyException;
@@ -45,7 +47,9 @@ class LoginTest {
                 mock(ResearcherService.class),
                 mock(LaboratoryService.class),
                 mock(CoffeeChatService.class),
-                mock(LabReviewService.class)
+                mock(LabReviewService.class),
+                mock(ProfessorService.class),
+                mock(BookmarkService.class)
         );
     }
 

@@ -447,8 +447,11 @@ public interface MemberApiSpecification {
             summary = "내 정보 조회",
             description = """
                     인증된 유저 본인의 정보를 조회합니다.
-                    userType이 RESEARCHER인 경우에만 연동된 연구실, 커피챗, 연구실 리뷰 정보가 함께 채워지며,
-                    그 외에는 laboratory/coffeeChat/labReview가 모두 null로 내려갑니다.
+                    userType이 RESEARCHER인 경우 연동된 연구실, 커피챗, 연구실 리뷰 정보가 함께 채워집니다.
+                    userType이 PROFESSOR인 경우 연동된 교수 정보(professor)와 교수 명의 연구실(laboratory)이 채워지며,
+                    아직 교수 레코드와 연동되지 않았으면 professor/laboratory가, 연구실을 개설하지 않았으면 laboratory가 null로 내려갑니다.
+                    그 외에는 laboratory/coffeeChat/labReview/professor가 모두 null로 내려갑니다.
+                    bookmarks(내 관심 연구실 목록)는 userType과 관계없이 항상 내려가며, 북마크가 없으면 빈 배열입니다.
                     """
     )
     @ApiResponses({
@@ -490,7 +493,17 @@ public interface MemberApiSpecification {
                                                           "coreTime": "있음",
                                                           "weeklyMeeting": "주 1회",
                                                           "doings": ["논문 리딩", "실험/코딩"]
-                                                        }
+                                                        },
+                                                        "professor": null,
+                                                        "bookmarks": [
+                                                          {
+                                                            "id": 1,
+                                                            "laboratory": {
+                                                              "id": 2,
+                                                              "labName": "지능형 데이터 시스템 연구실"
+                                                            }
+                                                          }
+                                                        ]
                                                       },
                                                       "code": null,
                                                       "message": "내 정보 조회 성공"
@@ -512,7 +525,54 @@ public interface MemberApiSpecification {
                                                         "userType": "FINDER",
                                                         "laboratory": null,
                                                         "coffeeChat": null,
-                                                        "labReview": null
+                                                        "labReview": null,
+                                                        "professor": null,
+                                                        "bookmarks": [
+                                                          {
+                                                            "id": 1,
+                                                            "laboratory": {
+                                                              "id": 2,
+                                                              "labName": "지능형 데이터 시스템 연구실"
+                                                            }
+                                                          }
+                                                        ]
+                                                      },
+                                                      "code": null,
+                                                      "message": "내 정보 조회 성공"
+                                                    }
+                                                    """
+                                    ),
+                                    @ExampleObject(
+                                            name = "교수",
+                                            value = """
+                                                    {
+                                                      "data": {
+                                                        "id": 3,
+                                                        "studentNumber": "12345678",
+                                                        "nickName": "홍길동",
+                                                        "department": "COMPUTER_ENGINEERING",
+                                                        "email": "hong@inu.ac.kr",
+                                                        "lastLoginAt": "2026-08-18T12:00:00",
+                                                        "isNew": false,
+                                                        "userType": "PROFESSOR",
+                                                        "laboratory": {
+                                                          "id": 1,
+                                                          "labName": "소프트웨어공학 연구실"
+                                                        },
+                                                        "coffeeChat": null,
+                                                        "labReview": null,
+                                                        "professor": {
+                                                          "id": 10,
+                                                          "positionRaw": "교수",
+                                                          "college": "COLLEGE_OF_INFORMATION_TECHNOLOGY",
+                                                          "collegeName": "정보기술대학",
+                                                          "department": "COMPUTER_ENGINEERING",
+                                                          "departmentName": "컴퓨터공학부",
+                                                          "name": "홍길동",
+                                                          "phoneNumber": "032-000-0000",
+                                                          "email": "hong@inu.ac.kr"
+                                                        },
+                                                        "bookmarks": []
                                                       },
                                                       "code": null,
                                                       "message": "내 정보 조회 성공"

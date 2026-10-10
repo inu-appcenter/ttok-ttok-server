@@ -14,12 +14,11 @@ import org.springframework.data.repository.query.Param;
 
 import java.util.Collection;
 import java.util.List;
+import java.util.Optional;
 
 public interface LaboratoryRepository extends JpaRepository<Laboratory, Long> {
     // 단건(Optional)이 아닌 List로 받아 서비스 단에서 첫 번째 결과만 사용한다.
     List<Laboratory> findByLabNameAndDepartmentAndProfessor_Name(String labName, Department department, String professorName);
-
-    boolean existsByLabNameAndProfessorAndDepartment(String labName, Professor professor, Department department);
 
     boolean existsByLabNameAndProfessorIdAndDepartment(String labName, Long professorId, Department department);
 
@@ -28,6 +27,9 @@ public interface LaboratoryRepository extends JpaRepository<Laboratory, Long> {
 
     // 이 교수가 이미 명의로 된 연구실이 있는지 확인 (연구실 생성은 아직 없는 교수만 가능)
     boolean existsByProfessorId(Long professorId);
+
+    // 교수 명의 연구실 조회 (교수 한 명당 연구실은 하나 - uk_laboratory_professor)
+    Optional<Laboratory> findByProfessorId(Long professorId);
 
     // 카테고리(다중) + 단과대 + 학과 필터로 범위를 좁히고, 그 안에서 키워드로 검색한다. (조건끼리는 AND)
     // - 카테고리는 여러 개 중 하나라도 해당하면 포함(OR). categories가 비어 있으면(allCategories = true) 전체로 처리한다.

@@ -27,6 +27,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
@@ -87,6 +88,15 @@ public class LaboratoryService {
                 .orElseThrow(() -> new MyException(ErrorCode.LABORATORY_NOT_FOUND));
 
         return LaboratoryResponseDto.from(laboratory);
+    }
+
+    /**
+     * 교수 명의 연구실 조회 메서드. 아직 연구실이 없는 교수면 비어 있는 Optional
+     */
+    @Transactional(readOnly = true)
+    public Optional<LaboratoryResponseDto> findLabByProfessorId(Long professorId) {
+        return laboratoryRepository.findByProfessorId(professorId)
+                .map(LaboratoryResponseDto::from);
     }
 
     /**

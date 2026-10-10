@@ -1,13 +1,15 @@
 package com.inuappcenter.team_2_project_server.domain.member.dto.response;
 
-import com.inuappcenter.team_2_project_server.domain.department.enums.Department;
+import com.inuappcenter.team_2_project_server.domain.bookmark.dto.BookmarkResponseDto;
 import com.inuappcenter.team_2_project_server.domain.coffeeChat.dto.CoffeeChatResponseDto;
+import com.inuappcenter.team_2_project_server.domain.department.enums.Department;
 import com.inuappcenter.team_2_project_server.domain.labReview.dto.LabReviewResponseDto;
 import com.inuappcenter.team_2_project_server.domain.laboratory.dto.response.LaboratoryResponseDto;
 import com.inuappcenter.team_2_project_server.domain.member.entity.Member;
 import com.inuappcenter.team_2_project_server.domain.member.enums.UserType;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 public record MemberResponseDto(
         Long id,
@@ -20,21 +22,25 @@ public record MemberResponseDto(
         UserType userType,
         CoffeeChatResponseDto coffeeChat,
         LaboratoryResponseDto laboratory,
-        LabReviewResponseDto labReview
+        LabReviewResponseDto labReview,
+        ProfessorResponseDto professor,
+        List<BookmarkResponseDto> bookmarks
 
 ) {
     // 엔티티는 Dto로 바꾸는 정적 팩토리 메서드
     public static MemberResponseDto from(
             Member member
     ) {
-        return of(member, null, null, null);
+        return of(member, null, null, null, null, null);
     }
 
     public static MemberResponseDto of(
             Member member,
             LaboratoryResponseDto laboratory,
             CoffeeChatResponseDto coffeeChat,
-            LabReviewResponseDto labReview
+            LabReviewResponseDto labReview,
+            ProfessorResponseDto professor,
+            List<BookmarkResponseDto> bookmark
     ) {
         return new MemberResponseDto(
                 member.getId(),
@@ -47,7 +53,9 @@ public record MemberResponseDto(
                 member.getUserType(),
                 coffeeChat,
                 laboratory,
-                labReview
+                labReview,
+                professor,
+                bookmark
         );
     }
 }
