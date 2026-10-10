@@ -18,6 +18,11 @@ import lombok.NoArgsConstructor;
                 @UniqueConstraint(
                         name = "uk_laboratory_lab_name_professor_department",
                         columnNames = {"lab_name", "professor_id", "department"}
+                ),
+                // 교수 한 명당 연구실은 하나
+                @UniqueConstraint(
+                        name = "uk_laboratory_professor",
+                        columnNames = {"professor_id"}
                 )
         }
 )

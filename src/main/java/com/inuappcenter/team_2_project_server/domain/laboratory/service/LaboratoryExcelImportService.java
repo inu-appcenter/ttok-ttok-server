@@ -96,8 +96,8 @@ public class LaboratoryExcelImportService {
 
             String researchFieldRaw = professorInfo.researchAreaRaw();
 
-            // 연구실 중복 검증
-            if (laboratoryRepository.existsByLabNameAndProfessorAndDepartment(row.labName(), professor, row.department())) {
+            // 교수 한 명당 연구실은 하나라, 이미 명의로 된 연구실이 있으면 연구실명이 달라도 새로 만들지 않는다
+            if (laboratoryRepository.existsByProfessorId(professor.getId())) {
                 continue;
             }
 
