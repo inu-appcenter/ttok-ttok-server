@@ -24,7 +24,7 @@ public record MemberResponseDto(
         LaboratoryResponseDto laboratory,
         LabReviewResponseDto labReview,
         ProfessorResponseDto professor,
-        List<BookmarkResponseDto> bookmark
+        List<BookmarkResponseDto> bookmarks
 
 ) {
     // 엔티티는 Dto로 바꾸는 정적 팩토리 메서드
