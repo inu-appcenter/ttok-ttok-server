@@ -6,7 +6,9 @@ import com.inuappcenter.team_2_project_server.domain.bookmark.repository.Bookmar
 import com.inuappcenter.team_2_project_server.domain.laboratory.entity.Laboratory;
 import com.inuappcenter.team_2_project_server.domain.laboratory.service.LaboratoryService;
 import com.inuappcenter.team_2_project_server.domain.member.entity.Member;
-import com.inuappcenter.team_2_project_server.domain.member.service.MemberService;
+import com.inuappcenter.team_2_project_server.domain.member.repository.MemberRepository;
+import com.inuappcenter.team_2_project_server.global.error.ex.ErrorCode;
+import com.inuappcenter.team_2_project_server.global.error.ex.MyException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -22,7 +24,7 @@ import java.util.Optional;
 @Transactional
 public class BookmarkService {
     private final BookmarkRepository bookmarkRepository;
-    private final MemberService memberService;
+    private final MemberRepository memberRepository;
     private final LaboratoryService laboratoryService;
 
     /**
@@ -46,7 +48,8 @@ public class BookmarkService {
             Long memberId,
             Long laboratoryId
     ) {
-        Member member = memberService.getMemberEntity(memberId);
+        Member member = memberRepository.findById(memberId)
+                .orElseThrow(() -> new MyException(ErrorCode.MEMBER_NOT_FOUND));
         Laboratory laboratory = laboratoryService.getLaboratoryEntity(laboratoryId);
 
         Optional<Bookmark> optionalBookMark = bookmarkRepository.findByMemberIdAndLaboratoryId(memberId, laboratoryId);
