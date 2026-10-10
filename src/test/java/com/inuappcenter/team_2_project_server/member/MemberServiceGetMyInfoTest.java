@@ -129,7 +129,7 @@ class MemberServiceGetMyInfoTest {
 
         MemberResponseDto result = memberService.getMyInfo(1L);
 
-        assertThat(result.bookmark()).containsExactly(bookmark);
+        assertThat(result.bookmarks()).containsExactly(bookmark);
     }
 
     @Test
@@ -141,7 +141,7 @@ class MemberServiceGetMyInfoTest {
 
         MemberResponseDto result = memberService.getMyInfo(1L);
 
-        assertThat(result.bookmark()).isEmpty();
+        assertThat(result.bookmarks()).isEmpty();
     }
 
     private Member professorMember() {

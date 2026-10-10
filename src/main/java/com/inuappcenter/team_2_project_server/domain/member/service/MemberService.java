@@ -225,7 +225,7 @@ public class MemberService {
         CoffeeChatResponseDto coffeeChat = null;
         LabReviewResponseDto labReview = null;
         ProfessorResponseDto professor = null;
-        List<BookmarkResponseDto> bookmarks = null;
+        List<BookmarkResponseDto> bookmarks;
 
         // 연구자일때
         if (member.getUserType() == UserType.RESEARCHER) {
