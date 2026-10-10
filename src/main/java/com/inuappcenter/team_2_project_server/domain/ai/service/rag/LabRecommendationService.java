@@ -3,13 +3,16 @@ package com.inuappcenter.team_2_project_server.domain.ai.service.rag;
 import com.inuappcenter.team_2_project_server.domain.laboratory.entity.Laboratory;
 import com.inuappcenter.team_2_project_server.domain.laboratory.repository.LaboratoryRepository;
 import com.inuappcenter.team_2_project_server.domain.ai.client.FactChatClient;
+import com.inuappcenter.team_2_project_server.domain.ai.dto.response.LabKeywordSuggestionResponseDto;
 import com.inuappcenter.team_2_project_server.domain.ai.dto.response.LabRecommendationResponseDto;
 import com.inuappcenter.team_2_project_server.domain.ai.dto.row.LabCandidateContextRow;
 import com.inuappcenter.team_2_project_server.domain.ai.dto.row.LabCandidateRow;
+import com.inuappcenter.team_2_project_server.domain.ai.dto.row.LabCategoryRow;
 import com.inuappcenter.team_2_project_server.domain.ai.enums.SearchSourceType;
 import com.inuappcenter.team_2_project_server.domain.ai.repository.LabSearchDocumentRepository;
 import com.inuappcenter.team_2_project_server.domain.ai.service.rag.RecommendationPromptBuilder.CandidateContext;
 import com.inuappcenter.team_2_project_server.domain.ai.service.rag.RecommendationPromptBuilder.RecommendationPick;
+import com.inuappcenter.team_2_project_server.domain.ai.service.rag.RecommendationPromptBuilder.StudentRequest;
 import com.inuappcenter.team_2_project_server.global.error.ex.ErrorCode;
 import com.inuappcenter.team_2_project_server.global.error.ex.MyException;
 import lombok.extern.slf4j.Slf4j;
@@ -22,7 +25,8 @@ import java.util.stream.Collectors;
 
 /**
  * 연구실 추천 (RAG)
- * 1. 질문을 임베딩한다.
+ * 0. (키워드 추천) 관심사 글로 후보 연구실을 찾고, 그 연구실들의 연구분야 카테고리를 키워드로 돌려준다. {@link #suggestKeywords}
+ * 1. 관심사 글 + 고른 키워드로 검색 문장을 만들어 임베딩한다.
  * 2. 검색: 질문 벡터와 가까운 연구실 후보를 찾는다. (프로필 + 논문 유사도, {@link LabSearchDocumentRepository#findCandidates})
  * 3. 선택: 후보들의 프로필과 관련 논문을 LLM에 주고, 질문에 맞는 연구실을 최대 3개 고르게 한다.
  * 4. LLM이 고른 id가 후보 안에 있는지 검증하고(없는 연구실을 지어내지 못하게), 연구실 정보는 DB에서 채운다.
@@ -43,6 +47,10 @@ public class LabRecommendationService {
     static final int PAPER_TOP_N = 3;
     // 최종 추천 최대 개수
     static final int MAX_RECOMMENDATIONS = 3;
+    // 키워드 추천: 카테고리를 모을 후보 연구실 수. 너무 많으면 질문과 먼 연구실의 카테고리까지 섞인다
+    static final int KEYWORD_CANDIDATE_COUNT = 10;
+    // 키워드 추천 최대 개수
+    static final int MAX_KEYWORDS = 5;
 
     private final LabSearchDocumentRepository labSearchDocumentRepository;
     private final LaboratoryRepository laboratoryRepository;
@@ -76,14 +84,71 @@ public class LabRecommendationService {
         return joiner.toString();
     }
 
-    public LabRecommendationResponseDto recommend(String question) {
-        String normalizedQuestion = question.strip();
+    // 검색(임베딩)용 문장. 벡터 검색은 JSON보다 자연스러운 문장일 때 정확하므로 LLM에 넘기는 JSON과 따로 만든다
+    static String toSearchText(StudentRequest request) {
+        if (request.keywords().isEmpty()) {
+            return request.interest();
+        }
+        return request.interest() + "\n관심 분야: " + String.join(", ", request.keywords());
+    }
 
-        // 1. 질문 임베딩. 실패하면 검색 자체를 할 수 없으므로 오류 응답
-        float[] questionVector = factChatClient.embed(embeddingModel, List.of(normalizedQuestion))
-                .map(List::getFirst)
-                .orElseThrow(() -> new MyException(ErrorCode.RECOMMENDATION_UNAVAILABLE));
-        String queryVector = toVectorLiteral(questionVector);
+    // 앞뒤 공백 제거, 빈 값과 중복 제거
+    private static StudentRequest normalize(String interest, List<String> keywords) {
+        List<String> normalizedKeywords = keywords == null ? List.of() : keywords.stream()
+                .filter(Objects::nonNull)
+                .map(String::strip)
+                .filter(keyword -> !keyword.isEmpty())
+                .distinct()
+                .toList();
+        return new StudentRequest(interest.strip(), normalizedKeywords);
+    }
+
+    /**
+     * 키워드 추천: 관심사 글과 가까운 후보 연구실들이 가진 연구분야 카테고리를 최대 5개 돌려준다.
+     * 순서: 가진 후보 연구실이 많은 순 -> 같으면 그 연구실들의 검색 순위 합이 작은 순(전체적으로 더 위) -> 이름 순
+     * 실제 후보 연구실의 카테고리만 나오므로, 어떤 키워드를 골라도 추천할 연구실이 있다.
+     */
+    public LabKeywordSuggestionResponseDto suggestKeywords(String message) {
+        String queryVector = embed(message.strip());
+
+        List<Long> candidateIds = labSearchDocumentRepository
+                .findCandidates(queryVector, PROFILE_WEIGHT, PAPER_TOP_N, KEYWORD_CANDIDATE_COUNT).stream()
+                .map(LabCandidateRow::getLaboratoryId)
+                .toList();
+        if (candidateIds.isEmpty()) {
+            // 키워드는 없어도 직접 입력으로 진행할 수 있으므로 오류 대신 빈 목록
+            log.warn("키워드 추천 후보 연구실이 없음. 검색 문서 인덱싱이 되어 있는지 확인 필요");
+            return new LabKeywordSuggestionResponseDto(List.of());
+        }
+
+        Map<Long, Integer> rankOf = new HashMap<>();
+        for (int rank = 0; rank < candidateIds.size(); rank++) {
+            rankOf.put(candidateIds.get(rank), rank);
+        }
+        Map<String, Integer> labCount = new HashMap<>();
+        Map<String, Integer> rankSum = new HashMap<>();
+        for (LabCategoryRow row : labSearchDocumentRepository.findCategoriesOfLaboratories(candidateIds)) {
+            if (row.getCategoryName() == null) {
+                continue;
+            }
+            labCount.merge(row.getCategoryName(), 1, Integer::sum);
+            rankSum.merge(row.getCategoryName(), rankOf.get(row.getLaboratoryId()), Integer::sum);
+        }
+
+        List<String> keywords = labCount.keySet().stream()
+                .sorted(Comparator.<String>comparingInt(labCount::get).reversed()
+                        .thenComparingInt(rankSum::get)
+                        .thenComparing(Comparator.naturalOrder()))
+                .limit(MAX_KEYWORDS)
+                .toList();
+        return new LabKeywordSuggestionResponseDto(keywords);
+    }
+
+    public LabRecommendationResponseDto recommend(String interest, List<String> keywords) {
+        StudentRequest request = normalize(interest, keywords);
+
+        // 1. 검색 문장 임베딩. 실패하면 검색 자체를 할 수 없으므로 오류 응답
+        String queryVector = embed(toSearchText(request));
 
         // 2. 검색: 후보 연구실
         List<Long> candidateIds = labSearchDocumentRepository
@@ -98,7 +163,7 @@ public class LabRecommendationService {
 
         // 3. 선택: LLM이 후보 중 최대 3개를 고른다. 실패하면 검색 순위 상위 3개로 대체 (추천 이유 없음)
         Map<Long, CandidateContext> contexts = loadContexts(queryVector, candidateIds);
-        String userMessage = promptBuilder.buildUserMessage(normalizedQuestion, candidateIds, contexts);
+        String userMessage = promptBuilder.buildUserMessage(request, candidateIds, contexts);
         List<RecommendationPick> picks = factChatClient.chat(chatModel, RecommendationPromptBuilder.SYSTEM_PROMPT, userMessage)
                 .flatMap(promptBuilder::parse)
                 .map(selected -> keepCandidatesOnly(selected, candidateIds))
@@ -109,7 +174,7 @@ public class LabRecommendationService {
             log.warn("LLM 연구실 선택 실패, 검색 순위로 대체");
             picks = candidateIds.stream()
                     .limit(MAX_RECOMMENDATIONS)
-                    .map(laboratoryId -> new RecommendationPick(laboratoryId, null))
+                    .map(laboratoryId -> new RecommendationPick(laboratoryId, List.of()))
                     .toList();
         }
 
@@ -119,10 +184,18 @@ public class LabRecommendationService {
                 .collect(Collectors.toMap(Laboratory::getId, Function.identity()));
         List<LabRecommendationResponseDto.Item> items = picks.stream()
                 .filter(pick -> laboratories.containsKey(pick.laboratoryId()))
-                .map(pick -> LabRecommendationResponseDto.Item.of(laboratories.get(pick.laboratoryId()), pick.reason()))
+                .map(pick -> LabRecommendationResponseDto.Item.of(laboratories.get(pick.laboratoryId()), pick.reasons()))
                 .toList();
 
         return new LabRecommendationResponseDto(!fallback && items.isEmpty(), items);
+    }
+
+    // 문장을 임베딩해 pgvector 문자열로. 실패하면 검색 자체를 할 수 없으므로 오류 응답
+    private String embed(String text) {
+        float[] vector = factChatClient.embed(embeddingModel, List.of(text))
+                .map(List::getFirst)
+                .orElseThrow(() -> new MyException(ErrorCode.RECOMMENDATION_UNAVAILABLE));
+        return toVectorLiteral(vector);
     }
 
     // 연구실마다 프로필 1개와 질문과 가까운 논문 몇 개
