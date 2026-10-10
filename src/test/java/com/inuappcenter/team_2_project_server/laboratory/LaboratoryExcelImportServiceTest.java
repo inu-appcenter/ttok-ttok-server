@@ -80,9 +80,7 @@ class LaboratoryExcelImportServiceTest {
                 "홍길동",
                 "hong@inu.ac.kr"
         )).willReturn(professor);
-        given(laboratoryRepository.existsByLabNameAndProfessorAndDepartment(
-                "AI연구실", professor, Department.COMPUTER_ENGINEERING
-        )).willReturn(false);
+        given(laboratoryRepository.existsByProfessorId(professor.getId())).willReturn(false);
         given(researchKeywordRepository.findByArea("인공지능")).willReturn(Optional.empty());
         given(researchKeywordRepository.save(any(ResearchArea.class))).willReturn(researchArea);
         given(laboratoryResearchKeywordRepository.existsByLaboratoryAndResearchKeyword(
@@ -102,7 +100,7 @@ class LaboratoryExcelImportServiceTest {
     }
 
     @Test
-    void importExcel_skips_laboratory_when_laboratory_already_exists() {
+    void importExcel_skips_laboratory_when_professor_already_has_laboratory() {
         MockMultipartFile file = excelFile();
         ProfessorExcelRow professorRow = professorRow("인공지능");
         LaboratoryExcelRow laboratoryRow = laboratoryRow();
@@ -115,9 +113,8 @@ class LaboratoryExcelImportServiceTest {
                 "홍길동",
                 "hong@inu.ac.kr"
         )).willReturn(professor);
-        given(laboratoryRepository.existsByLabNameAndProfessorAndDepartment(
-                "AI연구실", professor, Department.COMPUTER_ENGINEERING
-        )).willReturn(true);
+        // 엑셀의 연구실명이 기존과 달라도 교수 명의 연구실이 이미 있으면 새로 만들지 않는다
+        given(laboratoryRepository.existsByProfessorId(professor.getId())).willReturn(true);
 
         laboratoryExcelImportService.importExcel(file);
 

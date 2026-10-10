@@ -54,6 +54,25 @@ class ProfessorServiceTest {
     }
 
     @Test
+    void findByMemberId_returns_linked_professor() {
+        Professor professor = professor();
+        given(professorRepository.findByMemberId(1L)).willReturn(Optional.of(professor));
+
+        Optional<Professor> result = professorService.findByMemberId(1L);
+
+        assertThat(result).contains(professor);
+    }
+
+    @Test
+    void findByMemberId_returns_empty_when_not_linked() {
+        given(professorRepository.findByMemberId(1L)).willReturn(Optional.empty());
+
+        Optional<Professor> result = professorService.findByMemberId(1L);
+
+        assertThat(result).isEmpty();
+    }
+
+    @Test
     void getByDepartmentAndNameAndEmail_succeeds() {
         Professor professor = professor();
         given(professorRepository.findByDepartmentAndNameAndEmail(
