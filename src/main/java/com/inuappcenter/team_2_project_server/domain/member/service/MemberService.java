@@ -1,5 +1,7 @@
 package com.inuappcenter.team_2_project_server.domain.member.service;
 
+import com.inuappcenter.team_2_project_server.domain.bookmark.dto.BookmarkResponseDto;
+import com.inuappcenter.team_2_project_server.domain.bookmark.service.BookmarkService;
 import com.inuappcenter.team_2_project_server.domain.coffeeChat.dto.CoffeeChatResponseDto;
 import com.inuappcenter.team_2_project_server.domain.coffeeChat.service.CoffeeChatService;
 import com.inuappcenter.team_2_project_server.domain.labReview.dto.LabReviewResponseDto;
@@ -13,8 +15,10 @@ import com.inuappcenter.team_2_project_server.domain.member.dto.request.MemberUp
 import com.inuappcenter.team_2_project_server.domain.member.dto.request.TokenReissueRequestDto;
 import com.inuappcenter.team_2_project_server.domain.member.dto.response.LoginResponseDto;
 import com.inuappcenter.team_2_project_server.domain.member.dto.response.MemberResponseDto;
+import com.inuappcenter.team_2_project_server.domain.member.dto.response.ProfessorResponseDto;
 import com.inuappcenter.team_2_project_server.domain.member.dto.response.ResearcherResponseDto;
 import com.inuappcenter.team_2_project_server.domain.member.entity.Member;
+import com.inuappcenter.team_2_project_server.domain.member.entity.Professor;
 import com.inuappcenter.team_2_project_server.domain.member.enums.UserType;
 import com.inuappcenter.team_2_project_server.domain.member.repository.MemberRepository;
 import com.inuappcenter.team_2_project_server.domain.member.repository.SchoolAuthRepository;
@@ -42,6 +46,8 @@ public class MemberService {
     private final LaboratoryService laboratoryService;
     private final CoffeeChatService coffeeChatService;
     private final LabReviewService labReviewService;
+    private final ProfessorService professorService;
+    private final BookmarkService bookmarkService;
 
     /**
      * 로그인 메서드
@@ -218,7 +224,10 @@ public class MemberService {
         LaboratoryResponseDto laboratory = null;
         CoffeeChatResponseDto coffeeChat = null;
         LabReviewResponseDto labReview = null;
+        ProfessorResponseDto professor = null;
+        List<BookmarkResponseDto> bookmarks = null;
 
+        // 연구자일때
         if (member.getUserType() == UserType.RESEARCHER) {
             ResearcherResponseDto researcher = researcherService.getByMemberId(memberId);
             laboratory = laboratoryService.getLab(researcher.laboratoryId());
@@ -226,7 +235,19 @@ public class MemberService {
             labReview = labReviewService.getMyLabReview(memberId);
         }
 
-        return MemberResponseDto.of(member, laboratory, coffeeChat, labReview);
+        // 교수일때
+        if (member.getUserType() == UserType.PROFESSOR) {
+            Professor linkedProfessor = professorService.findByMemberId(memberId).orElse(null);
+
+            if (linkedProfessor != null) {
+                professor = ProfessorResponseDto.from(linkedProfessor);
+                laboratory = laboratoryService.findLabByProfessorId(linkedProfessor.getId()).orElse(null);
+            }
+        }
+
+        bookmarks = bookmarkService.getMyBookmark(memberId);
+
+        return MemberResponseDto.of(member, laboratory, coffeeChat, labReview, professor, bookmarks);
     }
 
     /**
