@@ -1,7 +1,5 @@
 package com.inuappcenter.team_2_project_server.domain.ai.service.rag;
 
-import com.inuappcenter.team_2_project_server.domain.laboratory.entity.Laboratory;
-import com.inuappcenter.team_2_project_server.domain.laboratory.repository.LaboratoryRepository;
 import com.inuappcenter.team_2_project_server.domain.ai.client.FactChatClient;
 import com.inuappcenter.team_2_project_server.domain.ai.dto.response.LabKeywordSuggestionResponseDto;
 import com.inuappcenter.team_2_project_server.domain.ai.dto.response.LabRecommendationResponseDto;
@@ -13,6 +11,8 @@ import com.inuappcenter.team_2_project_server.domain.ai.repository.LabSearchDocu
 import com.inuappcenter.team_2_project_server.domain.ai.service.rag.RecommendationPromptBuilder.CandidateContext;
 import com.inuappcenter.team_2_project_server.domain.ai.service.rag.RecommendationPromptBuilder.RecommendationPick;
 import com.inuappcenter.team_2_project_server.domain.ai.service.rag.RecommendationPromptBuilder.StudentRequest;
+import com.inuappcenter.team_2_project_server.domain.laboratory.entity.Laboratory;
+import com.inuappcenter.team_2_project_server.domain.laboratory.repository.LaboratoryRepository;
 import com.inuappcenter.team_2_project_server.global.error.ex.ErrorCode;
 import com.inuappcenter.team_2_project_server.global.error.ex.MyException;
 import lombok.extern.slf4j.Slf4j;
@@ -64,8 +64,8 @@ public class LabRecommendationService {
             LaboratoryRepository laboratoryRepository,
             FactChatClient factChatClient,
             RecommendationPromptBuilder promptBuilder,
-            @Value("${ai.recommendation.embedding-model:text-embedding-3-small}") String embeddingModel,
-            @Value("${ai.recommendation.chat-model:claude-haiku-5-5}") String chatModel
+            @Value("${ai.recommendation.embedding-model}") String embeddingModel,
+            @Value("${ai.recommendation.chat-model}") String chatModel
     ) {
         this.labSearchDocumentRepository = labSearchDocumentRepository;
         this.laboratoryRepository = laboratoryRepository;
@@ -108,8 +108,8 @@ public class LabRecommendationService {
      * 순서: 가진 후보 연구실이 많은 순 -> 같으면 그 연구실들의 검색 순위 합이 작은 순(전체적으로 더 위) -> 이름 순
      * 실제 후보 연구실의 카테고리만 나오므로, 어떤 키워드를 골라도 추천할 연구실이 있다.
      */
-    public LabKeywordSuggestionResponseDto suggestKeywords(String message) {
-        String queryVector = embed(message.strip());
+    public LabKeywordSuggestionResponseDto suggestKeywords(String interest) {
+        String queryVector = embed(interest.strip());
 
         List<Long> candidateIds = labSearchDocumentRepository
                 .findCandidates(queryVector, PROFILE_WEIGHT, PAPER_TOP_N, KEYWORD_CANDIDATE_COUNT).stream()
@@ -174,7 +174,7 @@ public class LabRecommendationService {
             log.warn("LLM 연구실 선택 실패, 검색 순위로 대체");
             picks = candidateIds.stream()
                     .limit(MAX_RECOMMENDATIONS)
-                    .map(laboratoryId -> new RecommendationPick(laboratoryId, List.of()))
+                    .map(laboratoryId -> new RecommendationPick(laboratoryId, null))
                     .toList();
         }
 
@@ -184,7 +184,7 @@ public class LabRecommendationService {
                 .collect(Collectors.toMap(Laboratory::getId, Function.identity()));
         List<LabRecommendationResponseDto.Item> items = picks.stream()
                 .filter(pick -> laboratories.containsKey(pick.laboratoryId()))
-                .map(pick -> LabRecommendationResponseDto.Item.of(laboratories.get(pick.laboratoryId()), pick.reasons()))
+                .map(pick -> LabRecommendationResponseDto.Item.of(laboratories.get(pick.laboratoryId()), pick.reason()))
                 .toList();
 
         return new LabRecommendationResponseDto(!fallback && items.isEmpty(), items);
