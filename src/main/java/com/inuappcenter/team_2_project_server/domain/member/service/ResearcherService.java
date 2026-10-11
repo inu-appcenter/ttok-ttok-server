@@ -5,6 +5,7 @@ import com.inuappcenter.team_2_project_server.domain.laboratory.repository.Labor
 import com.inuappcenter.team_2_project_server.domain.member.dto.response.ResearcherResponseDto;
 import com.inuappcenter.team_2_project_server.domain.member.entity.Member;
 import com.inuappcenter.team_2_project_server.domain.member.entity.Researcher;
+import com.inuappcenter.team_2_project_server.domain.member.enums.UserType;
 import com.inuappcenter.team_2_project_server.domain.member.repository.MemberRepository;
 import com.inuappcenter.team_2_project_server.domain.member.repository.ResearcherRepository;
 import com.inuappcenter.team_2_project_server.global.error.ex.ErrorCode;
@@ -12,6 +13,8 @@ import com.inuappcenter.team_2_project_server.global.error.ex.MyException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -34,10 +37,16 @@ public class ResearcherService {
         Member member = memberRepository.findById(memberId)
                 .orElseThrow(() -> new MyException(ErrorCode.MEMBER_NOT_FOUND));
 
+        if (member.getUserType() == UserType.PROFESSOR) {
+            throw new MyException(ErrorCode.ALREADY_PROFESSOR);
+        }
+
         Laboratory laboratory = laboratoryRepository.findById(laboratoryId)
                 .orElseThrow(() -> new MyException(ErrorCode.LABORATORY_NOT_FOUND));
 
         Researcher researcher = Researcher.create(member, laboratory, name);
+
+        member.assignUserType(UserType.RESEARCHER);
 
         return ResearcherResponseDto.from(researcherRepository.save(researcher));
     }
@@ -57,5 +66,21 @@ public class ResearcherService {
      */
     public boolean isAffiliated(Long memberId, Long laboratoryId) {
         return researcherRepository.existsByMemberIdAndLaboratoryId(memberId, laboratoryId);
+    }
+
+    /**
+     * memberId로 연구자 id 조회. 연구자가 아니면 비어 있는 Optional (회원 탈퇴처럼 없어도 되는 경우용)
+     */
+    public Optional<Long> findIdByMemberId(Long memberId) {
+        return researcherRepository.findByMemberId(memberId)
+                .map(Researcher::getId);
+    }
+
+    /**
+     * 연구자 삭제 (회원 탈퇴용). 이 연구자의 커피챗 삭제, 리뷰 익명화를 먼저 해야 한다
+     */
+    @Transactional
+    public void delete(Long researcherId) {
+        researcherRepository.deleteById(researcherId);
     }
 }

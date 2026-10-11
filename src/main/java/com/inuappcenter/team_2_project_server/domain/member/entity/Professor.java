@@ -104,4 +104,9 @@ public class Professor extends BaseEntity {
     public void linkMember(Member member) {
         this.member = member;
     }
+
+    // 연동된 계정이 탈퇴: 교수 레코드는 엑셀 원본 데이터라 남기고 연동만 해제한다 (온보딩으로 다시 연동 가능)
+    public void unlinkMember() {
+        this.member = null;
+    }
 }
