@@ -1,7 +1,9 @@
 package com.inuappcenter.team_2_project_server.domain.ai.controller;
 
 import com.inuappcenter.team_2_project_server.domain.ai.dto.AiResponseDto;
+import com.inuappcenter.team_2_project_server.domain.ai.dto.request.LabKeywordSuggestionRequestDto;
 import com.inuappcenter.team_2_project_server.domain.ai.dto.request.LabRecommendationRequestDto;
+import com.inuappcenter.team_2_project_server.domain.ai.dto.response.LabKeywordSuggestionResponseDto;
 import com.inuappcenter.team_2_project_server.domain.ai.dto.response.LabRecommendationResponseDto;
 import com.inuappcenter.team_2_project_server.domain.ai.dto.response.LabSearchIndexSyncResponseDto;
 import com.inuappcenter.team_2_project_server.domain.ai.service.chatbot.EmailEditorService;
@@ -33,10 +35,25 @@ public class AiController implements AiApiSpecification {
     public ResponseEntity<ResponseDto<LabRecommendationResponseDto>> researchLabChat(
             @Valid @RequestBody LabRecommendationRequestDto request
     ) {
-        LabRecommendationResponseDto response = labRecommendationService.recommend(request.message());
+        LabRecommendationResponseDto response = labRecommendationService.recommend(request.interest(), request.selectedKeywords());
 
         return ResponseEntity.ok(
                 ResponseDto.of(response, "연구실 추천 성공")
+        );
+    }
+
+    /**
+     * 연구실 추천 키워드 컨트롤러 (관심사 글 -> 연구분야 카테고리)
+     */
+    @Override
+    @PostMapping("/research-lab/keywords")
+    public ResponseEntity<ResponseDto<LabKeywordSuggestionResponseDto>> suggestResearchLabKeywords(
+            @Valid @RequestBody LabKeywordSuggestionRequestDto request
+    ) {
+        LabKeywordSuggestionResponseDto response = labRecommendationService.suggestKeywords(request.interest());
+
+        return ResponseEntity.ok(
+                ResponseDto.of(response, "연구실 추천 키워드 조회 성공")
         );
     }
 

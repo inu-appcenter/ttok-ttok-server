@@ -25,12 +25,16 @@ public class RecommendationPromptBuilder {
     public static final String SYSTEM_PROMPT = """
             당신은 인천대학교 학생에게 연구실을 추천하는 도우미입니다.
             
+            [학생 요청]은 JSON입니다.
+            - interest: 학생이 관심 있는 연구를 자유롭게 적은 글
+            - keywords: 학생이 고른 관심 분야 키워드 (없을 수 있음)
+            
             규칙:
             1. 반드시 아래 [후보 연구실] 목록 안에서만 고릅니다. 목록에 없는 연구실이나 ID를 만들어 내지 않습니다.
-            2. 학생의 관심사와 연구 내용이 실제로 맞는 연구실을 최대 3개, 잘 맞는 순서대로 고릅니다.
-            3. 질문에 학과 같은 조건이 있으면 그 조건을 만족하는 연구실만 고릅니다.
+            2. interest와 keywords를 함께 보고, 연구 내용이 실제로 맞는 연구실을 최대 3개, 잘 맞는 순서대로 고릅니다.
+            3. 요청에 학과 같은 조건이 있으면 그 조건을 만족하는 연구실만 고릅니다.
             4. 단어가 비슷할 뿐 연구 내용이 다르면 고르지 않습니다. 잘 맞는 연구실이 없으면 빈 목록을 돌려줍니다.
-            5. 추천 이유는 후보 정보에 적힌 내용만 근거로 한두 문장으로 씁니다.
+            5. 추천 이유는 후보 정보에 적힌 내용만 근거로, 한 줄짜리 짧은 문장 하나로 씁니다.
             
             아래 형식의 JSON만 출력합니다. 다른 글은 쓰지 않습니다.
             {"recommendations": [{"lab_id": 숫자, "reason": "추천 이유"}]}""";
@@ -41,14 +45,14 @@ public class RecommendationPromptBuilder {
     private final ObjectMapper objectMapper;
 
     /**
-     * 사용자 메시지: 학생 질문 + 후보 연구실 목록 (검색 점수 순)
+     * 사용자 메시지: 학생 요청(JSON) + 후보 연구실 목록 (검색 점수 순)
      *
      * @param candidateIds 후보 연구실 id (검색 점수 높은 순)
      * @param contexts     연구실 id -> 프롬프트에 넣을 프로필과 관련 논문
      */
-    public String buildUserMessage(String question, List<Long> candidateIds, Map<Long, CandidateContext> contexts) {
+    public String buildUserMessage(StudentRequest request, List<Long> candidateIds, Map<Long, CandidateContext> contexts) {
         StringBuilder message = new StringBuilder()
-                .append("[학생 질문]\n").append(question).append("\n\n")
+                .append("[학생 요청]\n").append(objectMapper.writeValueAsString(request)).append("\n\n")
                 .append("[후보 연구실]");
 
         for (Long laboratoryId : candidateIds) {
@@ -108,9 +112,18 @@ public class RecommendationPromptBuilder {
     }
 
     /**
+     * 프롬프트의 [학생 요청]에 JSON으로 넣는 값
+     *
+     * @param interest 관심 있는 연구를 자유롭게 적은 글
+     * @param keywords 고른 관심 분야 키워드 (없으면 빈 목록)
+     */
+    public record StudentRequest(String interest, List<String> keywords) {
+    }
+
+    /**
      * LLM이 고른 연구실 하나
      *
-     * @param reason LLM이 쓴 추천 이유. LLM 단계가 실패해 검색 결과로 대체한 경우 null
+     * @param reason LLM이 쓴 한 줄짜리 추천 이유. LLM 단계가 실패해 검색 결과로 대체한 경우 null
      */
     public record RecommendationPick(Long laboratoryId, String reason) {
     }

@@ -27,6 +27,9 @@ ai:
   base-url: http://localhost
   api-key: test-ai-api-key
   email-editor-chatbot-id: "0"
+  recommendation:
+    embedding-model: test-embedding-model
+    chat-model: test-chat-model
 
 ntis:
   base-url: http://localhost
