@@ -28,7 +28,7 @@ public class BookmarkService {
     private final LaboratoryService laboratoryService;
 
     /**
-     * 내 북마크 목록 조회 컨트롤러
+     * 내 북마크 목록 조회 로직
      */
     @Transactional(readOnly = true)
     public List<BookmarkResponseDto> getMyBookmark(
@@ -41,7 +41,7 @@ public class BookmarkService {
     }
 
     /**
-     * 북마크 토글 컨트롤러
+     * 북마크 토글 로직
      */
     @Transactional
     public void toggleBookmark(
@@ -67,5 +67,13 @@ public class BookmarkService {
                 log.info("연구실 북마크 등록 중복 시도(이미 등록됨) - member: {}, laboratory: {}", memberId, laboratoryId);
             }
         }
+    }
+
+    /**
+     * 북마크 전체 삭제 메서드(회원 탈퇴용)
+     */
+    @Transactional
+    public void deleteAllByMemberId(Long memberId) {
+        bookmarkRepository.deleteAllByMemberId(memberId);
     }
 }
