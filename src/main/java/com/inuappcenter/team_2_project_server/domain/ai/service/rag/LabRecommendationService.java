@@ -105,7 +105,9 @@ public class LabRecommendationService {
 
     /**
      * 키워드 추천: 관심사 글과 가까운 후보 연구실들이 가진 연구분야 카테고리를 최대 5개 돌려준다.
-     * 순서: 가진 후보 연구실이 많은 순 -> 같으면 그 연구실들의 검색 순위 합이 작은 순(전체적으로 더 위) -> 이름 순
+     * 순서: 카테고리마다 그 카테고리를 가진 후보 연구실의 순위 점수 1/(순위+1)을 더해 큰 순 -> 같으면 이름 순.
+     * 1위 연구실 카테고리가 가장 앞에 오고, 여러 상위 연구실이 함께 가진 카테고리도 앞쪽에 남는다.
+     * (가진 연구실 수만 세면 질문과 먼 하위 후보들이 공통으로 가진 카테고리가 앞에 오는 문제가 있었다. 평가셋에서 1위 키워드 적중 0.66 -> 0.85)
      * 실제 후보 연구실의 카테고리만 나오므로, 어떤 키워드를 골라도 추천할 연구실이 있다.
      */
     public LabKeywordSuggestionResponseDto suggestKeywords(String interest) {
@@ -125,19 +127,16 @@ public class LabRecommendationService {
         for (int rank = 0; rank < candidateIds.size(); rank++) {
             rankOf.put(candidateIds.get(rank), rank);
         }
-        Map<String, Integer> labCount = new HashMap<>();
-        Map<String, Integer> rankSum = new HashMap<>();
+        Map<String, Double> score = new HashMap<>();
         for (LabCategoryRow row : labSearchDocumentRepository.findCategoriesOfLaboratories(candidateIds)) {
             if (row.getCategoryName() == null) {
                 continue;
             }
-            labCount.merge(row.getCategoryName(), 1, Integer::sum);
-            rankSum.merge(row.getCategoryName(), rankOf.get(row.getLaboratoryId()), Integer::sum);
+            score.merge(row.getCategoryName(), 1.0 / (rankOf.get(row.getLaboratoryId()) + 1), Double::sum);
         }
 
-        List<String> keywords = labCount.keySet().stream()
-                .sorted(Comparator.<String>comparingInt(labCount::get).reversed()
-                        .thenComparingInt(rankSum::get)
+        List<String> keywords = score.keySet().stream()
+                .sorted(Comparator.<String>comparingDouble(score::get).reversed()
                         .thenComparing(Comparator.naturalOrder()))
                 .limit(MAX_KEYWORDS)
                 .toList();

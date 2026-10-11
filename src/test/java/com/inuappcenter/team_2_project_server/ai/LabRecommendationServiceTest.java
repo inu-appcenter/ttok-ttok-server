@@ -166,8 +166,8 @@ class LabRecommendationServiceTest {
     // ===== 키워드 추천 =====
 
     @Test
-    void suggests_categories_owned_by_more_candidate_labs_first() {
-        // 가진 연구실 수가 같으면(에너지: 1·3위, 촉매: 1·2위) 순위 합이 작은 쪽이 먼저, 그래도 같으면 이름 순
+    void suggests_categories_by_sum_of_candidate_rank_scores() {
+        // 점수 = 그 카테고리를 가진 후보의 1/(순위+1) 합. 촉매 1+1/2, 에너지 1+1/3, 화학 1/2, 소재 1/3, 배터리 1/4, 수소·환경 1/5
         given(labSearchDocumentRepository.findCategoriesOfLaboratories(anyCollection())).willReturn(List.of(
                 category(1, "에너지"), category(1, "촉매"),
                 category(2, "촉매"), category(2, "화학"),
@@ -179,6 +179,18 @@ class LabRecommendationServiceTest {
 
         verify(labSearchDocumentRepository).findCandidates(eq("[0.5,-0.25]"), eq(0.7), eq(3), eq(10));
         assertThat(response.keywords()).containsExactly("촉매", "에너지", "화학", "소재", "배터리");
+    }
+
+    @Test
+    void top_candidate_category_comes_before_category_shared_by_lower_candidates() {
+        // 하위 후보 3곳이 함께 가진 카테고리(1/3+1/4+1/5)보다 1위 후보의 카테고리(1)가 먼저
+        given(labSearchDocumentRepository.findCategoriesOfLaboratories(anyCollection())).willReturn(List.of(
+                category(1, "언어학"), category(3, "운동생리학"), category(4, "운동생리학"), category(5, "운동생리학")
+        ));
+
+        LabKeywordSuggestionResponseDto response = labRecommendationService.suggestKeywords(QUESTION);
+
+        assertThat(response.keywords()).containsExactly("언어학", "운동생리학");
     }
 
     @Test
