@@ -58,35 +58,11 @@ class RecommendationPromptBuilderTest {
     @Test
     void parses_recommendations_in_order() {
         Optional<List<RecommendationPick>> picks = promptBuilder.parse("""
-                {"recommendations": [
-                  {"lab_id": 157, "reasons": ["수전해 촉매", "수소 생산"]},
-                  {"lab_id": 68, "reasons": ["CO2 전환"]}
-                ]}""");
+                {"recommendations": [{"lab_id": 157, "reason": "수전해 촉매"}, {"lab_id": 68, "reason": "CO2 전환"}]}""");
 
         assertThat(picks).hasValueSatisfying(list -> assertThat(list).containsExactly(
-                new RecommendationPick(157L, List.of("수전해 촉매", "수소 생산")),
-                new RecommendationPick(68L, List.of("CO2 전환"))
-        ));
-    }
-
-    @Test
-    void keeps_at_most_two_non_blank_reasons() {
-        Optional<List<RecommendationPick>> picks = promptBuilder.parse("""
-                {"recommendations": [{"lab_id": 1, "reasons": ["  이유1 ", "", null, "이유2", "이유3"]}]}""");
-
-        assertThat(picks).hasValueSatisfying(list -> assertThat(list).containsExactly(
-                new RecommendationPick(1L, List.of("이유1", "이유2"))
-        ));
-    }
-
-    @Test
-    void accepts_old_single_reason_format() {
-        Optional<List<RecommendationPick>> picks = promptBuilder.parse("""
-                {"recommendations": [{"lab_id": 1, "reason": "예전 형식"}, {"lab_id": 2}]}""");
-
-        assertThat(picks).hasValueSatisfying(list -> assertThat(list).containsExactly(
-                new RecommendationPick(1L, List.of("예전 형식")),
-                new RecommendationPick(2L, List.of())
+                new RecommendationPick(157L, "수전해 촉매"),
+                new RecommendationPick(68L, "CO2 전환")
         ));
     }
 
@@ -95,10 +71,10 @@ class RecommendationPromptBuilderTest {
         Optional<List<RecommendationPick>> picks = promptBuilder.parse("""
                 추천 결과입니다.
                 ```json
-                {"recommendations": [{"lab_id": 9, "reasons": ["연료전지"]}]}
+                {"recommendations": [{"lab_id": 9, "reason": "연료전지"}]}
                 ```""");
 
-        assertThat(picks).hasValueSatisfying(list -> assertThat(list).containsExactly(new RecommendationPick(9L, List.of("연료전지"))));
+        assertThat(picks).hasValueSatisfying(list -> assertThat(list).containsExactly(new RecommendationPick(9L, "연료전지")));
     }
 
     @Test
@@ -109,9 +85,9 @@ class RecommendationPromptBuilderTest {
     @Test
     void skips_item_without_lab_id() {
         Optional<List<RecommendationPick>> picks = promptBuilder.parse("""
-                {"recommendations": [{"reasons": ["id 없음"]}, {"lab_id": 3, "reasons": ["정상"]}]}""");
+                {"recommendations": [{"reason": "id 없음"}, {"lab_id": 3, "reason": "정상"}]}""");
 
-        assertThat(picks).hasValueSatisfying(list -> assertThat(list).containsExactly(new RecommendationPick(3L, List.of("정상"))));
+        assertThat(picks).hasValueSatisfying(list -> assertThat(list).containsExactly(new RecommendationPick(3L, "정상")));
     }
 
     @Test
