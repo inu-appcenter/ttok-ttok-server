@@ -1,5 +1,6 @@
 package com.inuappcenter.team_2_project_server.domain.ai.dto.response;
 
+import com.inuappcenter.team_2_project_server.domain.laboratory.dto.response.LaboratoryResponseDto;
 import com.inuappcenter.team_2_project_server.domain.laboratory.entity.Laboratory;
 
 import java.util.List;
@@ -15,13 +16,15 @@ public record LabRecommendationResponseDto(
 ) {
 
     /**
-     * @param reason 추천 이유. AI 선택 단계가 실패해 검색 순위로 대체한 경우 null
+     * @param keywords 연구실 연구분야 태그 (연구실 상세의 researchAreas와 같은 값)
+     * @param reason   한 줄짜리 추천 이유. AI 선택 단계가 실패해 검색 순위로 대체한 경우 null
      */
     public record Item(
             Long laboratoryId,
             String labName,
             String department,
             String professorName,
+            List<String> keywords,
             String reason
     ) {
         public static Item of(Laboratory laboratory, String reason) {
@@ -30,6 +33,7 @@ public record LabRecommendationResponseDto(
                     laboratory.getLabName(),
                     laboratory.getDepartment().getDepartmentName(),
                     laboratory.getProfessor() == null ? null : laboratory.getProfessor().getName(),
+                    LaboratoryResponseDto.parseResearchAreas(laboratory.getResearchFieldRaw()),
                     reason
             );
         }

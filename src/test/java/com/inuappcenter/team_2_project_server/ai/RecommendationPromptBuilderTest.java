@@ -3,6 +3,7 @@ package com.inuappcenter.team_2_project_server.ai;
 import com.inuappcenter.team_2_project_server.domain.ai.service.rag.RecommendationPromptBuilder;
 import com.inuappcenter.team_2_project_server.domain.ai.service.rag.RecommendationPromptBuilder.CandidateContext;
 import com.inuappcenter.team_2_project_server.domain.ai.service.rag.RecommendationPromptBuilder.RecommendationPick;
+import com.inuappcenter.team_2_project_server.domain.ai.service.rag.RecommendationPromptBuilder.StudentRequest;
 import org.junit.jupiter.api.Test;
 import tools.jackson.databind.json.JsonMapper;
 
@@ -21,7 +22,7 @@ class RecommendationPromptBuilderTest {
     @Test
     void user_message_lists_candidates_in_search_order_with_related_papers() {
         String message = promptBuilder.buildUserMessage(
-                "수소 연료전지 연구",
+                new StudentRequest("수소 연료전지 연구", List.of("에너지", "연료전지")),
                 List.of(9L, 77L),
                 Map.of(
                         9L, new CandidateContext("멀티스케일아키텍처링연구실 (기계공학과, 김상문 교수)", List.of("논문A. 저널", "논문B")),
@@ -29,7 +30,12 @@ class RecommendationPromptBuilderTest {
                 )
         );
 
-        assertThat(message).startsWith("[학생 질문]\n수소 연료전지 연구\n\n[후보 연구실]");
+        // 학생 요청은 필드를 나눈 JSON으로 넣는다
+        assertThat(message).startsWith("""
+                [학생 요청]
+                {"interest":"수소 연료전지 연구","keywords":["에너지","연료전지"]}
+
+                [후보 연구실]""");
         assertThat(message).contains("[lab_id=9]\n멀티스케일아키텍처링연구실 (기계공학과, 김상문 교수)\n질문과 관련 있는 논문: 논문A. 저널 / 논문B");
         assertThat(message.indexOf("[lab_id=9]")).isLessThan(message.indexOf("[lab_id=77]"));
         // 관련 논문이 없는 연구실은 논문 줄을 붙이지 않는다
@@ -39,7 +45,7 @@ class RecommendationPromptBuilderTest {
     @Test
     void user_message_skips_candidate_without_profile() {
         String message = promptBuilder.buildUserMessage(
-                "질문",
+                new StudentRequest("질문", List.of()),
                 List.of(1L, 2L),
                 Map.of(1L, new CandidateContext("연구실1", List.of()), 2L, new CandidateContext(null, List.of("논문")))
         );

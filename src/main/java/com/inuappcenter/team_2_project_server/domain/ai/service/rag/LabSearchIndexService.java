@@ -45,7 +45,7 @@ public class LabSearchIndexService {
             LabSearchDocumentRepository labSearchDocumentRepository,
             FactChatClient factChatClient,
             TransactionTemplate transactionTemplate,
-            @Value("${ai.recommendation.embedding-model:text-embedding-3-small}") String embeddingModel
+            @Value("${ai.recommendation.embedding-model}") String embeddingModel
     ) {
         this.laboratoryRepository = laboratoryRepository;
         this.labSearchDocumentRepository = labSearchDocumentRepository;

@@ -28,6 +28,9 @@ ai:
   api-key: test-ai-api-key
   email-editor:
     chat-model: test-chat-model
+  recommendation:
+    embedding-model: test-embedding-model
+    chat-model: test-chat-model
 
 ntis:
   base-url: http://localhost

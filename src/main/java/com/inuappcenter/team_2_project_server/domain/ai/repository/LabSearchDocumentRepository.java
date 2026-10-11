@@ -1,6 +1,7 @@
 package com.inuappcenter.team_2_project_server.domain.ai.repository;
 
 import com.inuappcenter.team_2_project_server.domain.ai.dto.row.LabCandidateContextRow;
+import com.inuappcenter.team_2_project_server.domain.ai.dto.row.LabCategoryRow;
 import com.inuappcenter.team_2_project_server.domain.ai.dto.row.LabCandidateRow;
 import com.inuappcenter.team_2_project_server.domain.ai.dto.row.LabSearchDocumentKeyRow;
 import com.inuappcenter.team_2_project_server.domain.ai.dto.row.PublicationSourceRow;
@@ -99,4 +100,14 @@ public interface LabSearchDocumentRepository extends JpaRepository<LabSearchDocu
             @Param("laboratoryIds") Collection<Long> laboratoryIds,
             @Param("paperCount") int paperCount
     );
+
+    // 키워드 추천: 후보 연구실들이 가진 연구분야 카테고리 (연구실-카테고리 쌍, 중복 제거)
+    @Query("""
+            select distinct lra.laboratory.id as laboratoryId, c.categoryName as categoryName
+            from LaboratoryResearchArea lra
+            join lra.researchKeyword ra
+            join ra.category c
+            where lra.laboratory.id in :laboratoryIds
+            """)
+    List<LabCategoryRow> findCategoriesOfLaboratories(@Param("laboratoryIds") Collection<Long> laboratoryIds);
 }
