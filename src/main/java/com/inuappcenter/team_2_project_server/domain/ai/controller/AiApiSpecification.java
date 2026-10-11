@@ -1,7 +1,9 @@
 package com.inuappcenter.team_2_project_server.domain.ai.controller;
 
+import com.inuappcenter.team_2_project_server.domain.ai.dto.request.EmailRequestDto;
 import com.inuappcenter.team_2_project_server.domain.ai.dto.request.LabKeywordSuggestionRequestDto;
 import com.inuappcenter.team_2_project_server.domain.ai.dto.request.LabRecommendationRequestDto;
+import com.inuappcenter.team_2_project_server.domain.ai.dto.response.EmailResponseDto;
 import com.inuappcenter.team_2_project_server.domain.ai.dto.response.LabKeywordSuggestionResponseDto;
 import com.inuappcenter.team_2_project_server.domain.ai.dto.response.LabRecommendationResponseDto;
 import com.inuappcenter.team_2_project_server.domain.ai.dto.response.LabSearchIndexSyncResponseDto;
@@ -16,7 +18,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RequestBody;
 
-@Tag(name = "AI", description = "연구실 추천(RAG)과 이메일 작성 도우미(FactChat 챗봇) API")
+@Tag(name = "AI", description = "연구실 추천(RAG)과 교수님께 메일 쓰기 API")
 public interface AiApiSpecification {
 
     @Operation(
@@ -220,22 +222,36 @@ public interface AiApiSpecification {
     ResponseEntity<ResponseDto<LabSearchIndexSyncResponseDto>> syncResearchLabIndex();
 
     @Operation(
-            summary = "이메일 작성 도우미 챗봇에게 질문",
+            summary = "교수님께 메일 쓰기 (초안 생성)",
             description = """
-                    인증된 사용자가 보낸 message 를 이메일 작성/첨삭용 FactChat 챗봇에 그대로 전달하고, 첫 번째 응답 메시지를 answer 로 돌려줍니다.
-                    대화 이력은 서버에 저장하지 않으며, 매 요청이 독립적인 단발성 질문으로 처리됩니다.
-                    외부 AI 서버 호출이 동기로 이뤄지므로 응답까지 수 초가 걸릴 수 있습니다.
+                    연구실 상세 화면에서 입력한 항목으로 교수님께 보낼 메일의 제목과 본문 초안을 만듭니다. 로그인한 유저만 사용할 수 있습니다.
+                    - 연구실명, 연구 분야, 소개, 담당 교수 이름은 laboratoryId로 서버가 DB에서 채웁니다.
+                    - 본문 형식: 인사말("안녕하세요, ○○○ 교수님.") + 자기소개와 연락 목적 문장 + AI가 쓴 본문 + "감사합니다. ○○○ 드림"
+                      인사말, 자기소개, 연락 목적 문장, 끝인사, 서명은 서버가 고정 형식으로 붙이고, AI는 가운데 본문만 씁니다.
+                    - 제목 형식: "[학부연구생 지원 문의] 국어국문학과 홍길동"
+                    - purpose: UNDERGRADUATE_RESEARCH(학부연구생 지원), GRADUATE_CONSULTING(대학원 진학 상담), QUESTION(교수님께 질문)
+                    - grade: FIRST, SECOND, THIRD, FOURTH, FIFTHPLUS(5학년+)
+                    - email, phoneNumber는 받지만 초안에는 넣지 않습니다.
+                    - 검증: name 최대 20자, email 형식, phoneNumber 최대 13자(선택), interest 필수 최대 300자, content 최대 1200자(선택)
                     """
     )
     @io.swagger.v3.oas.annotations.parameters.RequestBody(
-            description = "챗봇에게 보낼 질문 문자열",
+            description = "메일 쓰기 입력 항목",
             required = true,
             content = @Content(
                     mediaType = "application/json",
-                    schema = @Schema(implementation = AiController.ChatRequest.class),
+                    schema = @Schema(implementation = EmailRequestDto.class),
                     examples = @ExampleObject(value = """
                             {
-                              "message": "교수님께 보낼 면담 요청 메일을 정중하게 작성해줘"
+                              "purpose": "UNDERGRADUATE_RESEARCH",
+                              "laboratoryId": 157,
+                              "name": "홍길동",
+                              "department": "COMPUTER_ENGINEERING",
+                              "grade": "THIRD",
+                              "email": "ttokttok@gmail.com",
+                              "phoneNumber": "010-1234-5678",
+                              "interest": "나노촉매를 이용한 수전해 수소 생산 연구에 관심이 있습니다.",
+                              "content": "일반화학실험 수업에서 촉매 반응 실험을 했고, 수소 에너지 관련 조별 과제를 진행했습니다."
                             }
                             """)
             )
@@ -243,24 +259,36 @@ public interface AiApiSpecification {
     @ApiResponses({
             @ApiResponse(
                     responseCode = "200",
-                    description = "AI 응답 성공",
+                    description = "메일 초안 생성 성공",
                     content = @Content(
                             mediaType = "application/json",
-                            schema = @Schema(implementation = AiController.ChatResult.class),
+                            schema = @Schema(implementation = ResponseDto.class),
                             examples = @ExampleObject(value = """
                                     {
-                                      "answer": "안녕하세요 교수님, ...",
-                                      "credits": 987.5
+                                      "data": {
+                                        "subject": "[학부연구생 지원 문의] 컴퓨터공학부 홍길동",
+                                        "body": "안녕하세요, 권태현 교수님.\n저는 컴퓨터공학부 3학년 홍길동입니다. 교수님 연구실의 학부연구생으로 지원하고 싶어 연락드렸습니다.\n\n(AI가 쓴 본문)\n\n감사합니다.\n홍길동 드림"
+                                      },
+                                      "code": null,
+                                      "message": "메일 초안 생성 성공"
                                     }
                                     """)
-            )
+                    )
+            ),
+            @ApiResponse(
+                    responseCode = "400",
+                    description = "입력값 검증 실패",
+                    content = @Content(
+                            mediaType = "application/json",
+                            schema = @Schema(implementation = ResponseDto.class)
+                    )
             ),
             @ApiResponse(
                     responseCode = "401",
                     description = "인증 토큰이 없거나 유효하지 않음",
                     content = @Content(
                             mediaType = "application/json",
-                            schema = @Schema(implementation = com.inuappcenter.team_2_project_server.global.dto.ResponseDto.class),
+                            schema = @Schema(implementation = ResponseDto.class),
                             examples = @ExampleObject(value = """
                                     {
                                       "data": null,
@@ -271,10 +299,35 @@ public interface AiApiSpecification {
                     )
             ),
             @ApiResponse(
-                    responseCode = "500",
-                    description = "외부 AI 서버 호출 실패 또는 빈 응답",
-                    content = @Content(mediaType = "application/json")
+                    responseCode = "404",
+                    description = "존재하지 않는 연구실",
+                    content = @Content(
+                            mediaType = "application/json",
+                            schema = @Schema(implementation = ResponseDto.class),
+                            examples = @ExampleObject(value = """
+                                    {
+                                      "data": null,
+                                      "code": "LABORATORY_NOT_FOUND",
+                                      "message": "존재하지 않는 연구실입니다."
+                                    }
+                                    """)
+                    )
+            ),
+            @ApiResponse(
+                    responseCode = "503",
+                    description = "AI 서비스 장애로 본문 생성 실패",
+                    content = @Content(
+                            mediaType = "application/json",
+                            schema = @Schema(implementation = ResponseDto.class),
+                            examples = @ExampleObject(value = """
+                                    {
+                                      "data": null,
+                                      "code": "EMAIL_DRAFT_UNAVAILABLE",
+                                      "message": "메일 초안을 일시적으로 만들 수 없습니다. 잠시 후 다시 시도해 주세요."
+                                    }
+                                    """)
+                    )
             )
     })
-    AiController.ChatResult emailEditorChat(@RequestBody AiController.ChatRequest request);
+    ResponseEntity<ResponseDto<EmailResponseDto>> writeEmailDraft(@RequestBody EmailRequestDto request);
 }

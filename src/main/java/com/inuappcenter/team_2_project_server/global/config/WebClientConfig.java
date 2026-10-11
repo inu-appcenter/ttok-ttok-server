@@ -65,9 +65,9 @@ public class WebClientConfig {
     }
 
     /**
-     * AI 게이트웨이 API (연구실 추천: 임베딩, LLM 선택)
-     * 아래 챗봇 API와 같은 키를 쓰지만, 추천은 사용자가 화면에서 기다리는 요청이라 타임아웃을 건다.
-     * (응답이 늦으면 끊고 검색 결과만으로 대체 응답을 준다. 챗봇 API는 응답에 1~2분 걸리기도 해서 그대로 둔다)
+     * AI 게이트웨이 API (연구실 추천: 임베딩, LLM 선택 / 메일 쓰기: 본문 생성)
+     * 사용자가 화면에서 기다리는 요청이라 타임아웃을 건다.
+     * (연구실 추천은 응답이 늦으면 끊고 검색 결과만으로 대체 응답을 준다)
      */
     @Bean
     public WebClient factChatGatewayWebClient(
@@ -85,21 +85,6 @@ public class WebClientConfig {
                 .defaultHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
                 // 임베딩 응답은 문장 100개 x 숫자 1536개라 기본 버퍼(256KB)를 넘는다
                 .codecs(configurer -> configurer.defaultCodecs().maxInMemorySize(16 * 1024 * 1024))
-                .build();
-    }
-
-    /**
-     * AI 챗봇 API
-     */
-    @Bean
-    public WebClient factChatWebClient(
-            @Value("${ai.base-url}") String baseUrl,
-            @Value("${ai.api-key}") String apiKey
-    ) {
-        return WebClient.builder()
-                .baseUrl(baseUrl)
-                .defaultHeader(HttpHeaders.AUTHORIZATION, "Bearer " + apiKey)
-                .defaultHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
                 .build();
     }
 }
