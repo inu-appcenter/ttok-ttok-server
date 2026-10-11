@@ -1,7 +1,8 @@
 package com.inuappcenter.team_2_project_server.domain.ai.controller;
 
-import com.inuappcenter.team_2_project_server.domain.ai.dto.AiResponseDto;
+import com.inuappcenter.team_2_project_server.domain.ai.dto.request.EmailRequestDto;
 import com.inuappcenter.team_2_project_server.domain.ai.dto.request.LabRecommendationRequestDto;
+import com.inuappcenter.team_2_project_server.domain.ai.dto.response.EmailResponseDto;
 import com.inuappcenter.team_2_project_server.domain.ai.dto.response.LabRecommendationResponseDto;
 import com.inuappcenter.team_2_project_server.domain.ai.dto.response.LabSearchIndexSyncResponseDto;
 import com.inuappcenter.team_2_project_server.domain.ai.service.chatbot.EmailEditorService;
@@ -54,28 +55,17 @@ public class AiController implements AiApiSpecification {
     }
 
     /**
-     * 이메일 교정 컨트롤러 (챗봇)
+     * 교수님께 메일 쓰기 컨트롤러 (구조화 입력 -> 메일 제목 + 본문 초안)
      */
     @Override
     @PostMapping("/email-editor")
-    public ChatResult emailEditorChat(@RequestBody ChatRequest request) {
-        AiResponseDto response = emailEditorService.ask(request.message());
-
-        String answer = response.choices()
-                .get(0)
-                .message()
-                .content();
-
-        return new ChatResult(answer, response.credits());
-    }
-
-
-    public record ChatRequest(String message) {
-    }
-
-    public record ChatResult(
-            String answer,
-            Double credits
+    public ResponseEntity<ResponseDto<EmailResponseDto>> writeEmailDraft(
+            @Valid @RequestBody EmailRequestDto request
     ) {
+        EmailResponseDto response = emailEditorService.writeDraft(request);
+
+        return ResponseEntity.ok(
+                ResponseDto.of(response, "메일 초안 생성 성공")
+        );
     }
 }
