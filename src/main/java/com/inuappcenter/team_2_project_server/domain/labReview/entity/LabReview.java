@@ -36,8 +36,9 @@ public class LabReview extends BaseEntity {
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     private Laboratory laboratory;
 
-    @JoinColumn(name = "researcher_id", unique = true, nullable = false)
-    @OneToOne(fetch = FetchType.LAZY, optional = false)
+    // 작성자가 탈퇴하면 null (리뷰는 익명으로 남긴다)
+    @JoinColumn(name = "researcher_id", unique = true)
+    @OneToOne(fetch = FetchType.LAZY)
     private Researcher researcher;
 
     @Column(name = "core_time")
@@ -109,5 +110,10 @@ public class LabReview extends BaseEntity {
         this.coreTime = normalize(coreTime);
         this.weeklyMeeting = normalize(weeklyMeeting);
         this.doings = normalizeAll(doings);
+    }
+
+    // 작성자 탈퇴: 리뷰 내용은 남기고 작성자 연결만 끊는다 (화면에서는 원래 익명으로 보인다)
+    public void anonymize() {
+        this.researcher = null;
     }
 }

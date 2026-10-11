@@ -118,4 +118,12 @@ public class LabReviewService {
 
         return deletedReviewId;
     }
+
+    /**
+     * 연구자의 리뷰 익명화 (회원 탈퇴용). 리뷰는 삭제하지 않고 작성자 연결만 끊는다. 리뷰가 없으면 아무 일도 하지 않는다
+     */
+    public void anonymizeByResearcherId(Long researcherId) {
+        labReviewRepository.findByResearcherId(researcherId)
+                .ifPresent(LabReview::anonymize);
+    }
 }
