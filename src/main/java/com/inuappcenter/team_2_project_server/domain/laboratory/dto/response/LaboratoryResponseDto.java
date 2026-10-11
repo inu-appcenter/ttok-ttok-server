@@ -44,7 +44,8 @@ public record LaboratoryResponseDto(
         );
     }
 
-    private static List<String> parseResearchAreas(String raw) {
+    // 엑셀 원문(쉼표 구분)을 태그 목록으로. 연구실 추천 응답에서도 같은 기준으로 쓴다
+    public static List<String> parseResearchAreas(String raw) {
         if (raw == null || raw.isBlank()) {
             return List.of();
         }
