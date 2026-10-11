@@ -5,6 +5,7 @@ import com.inuappcenter.team_2_project_server.domain.laboratory.repository.Labor
 import com.inuappcenter.team_2_project_server.domain.member.dto.response.ResearcherResponseDto;
 import com.inuappcenter.team_2_project_server.domain.member.entity.Member;
 import com.inuappcenter.team_2_project_server.domain.member.entity.Researcher;
+import com.inuappcenter.team_2_project_server.domain.member.enums.UserType;
 import com.inuappcenter.team_2_project_server.domain.member.repository.MemberRepository;
 import com.inuappcenter.team_2_project_server.domain.member.repository.ResearcherRepository;
 import com.inuappcenter.team_2_project_server.domain.member.service.ResearcherService;
@@ -60,6 +61,24 @@ class ResearcherServiceTest {
         assertThat(response.laboratoryName()).isEqualTo("소프트웨어공학 연구실");
         assertThat(response.validateYN()).isFalse();
         verify(researcherRepository).save(any(Researcher.class));
+        // 등록 API로 연구자가 되어도 유저 타입이 연구자 레코드와 맞도록 RESEARCHER로 바꾼다
+        verify(member).assignUserType(UserType.RESEARCHER);
+    }
+
+    @Test
+    void register_fails_when_member_is_professor() {
+        Member professorMember = mock(Member.class);
+        given(professorMember.getUserType()).willReturn(UserType.PROFESSOR);
+        given(researcherRepository.existsByMemberId(1L)).willReturn(false);
+        given(memberRepository.findById(1L)).willReturn(Optional.of(professorMember));
+
+        assertThatThrownBy(() -> researcherService.register(1L, 10L, "홍길동"))
+                .isInstanceOf(MyException.class)
+                .extracting("errorCode")
+                .isEqualTo(ErrorCode.ALREADY_PROFESSOR);
+
+        verify(professorMember, never()).assignUserType(any());
+        verify(researcherRepository, never()).save(any());
     }
 
     @Test

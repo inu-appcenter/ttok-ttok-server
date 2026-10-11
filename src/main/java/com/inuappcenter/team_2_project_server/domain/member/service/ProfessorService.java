@@ -120,4 +120,13 @@ public class ProfessorService {
 
         candidates.get(0).linkMember(member);
     }
+
+    /**
+     * 계정과 교수 레코드의 연동 해제 (회원 탈퇴용). 교수 레코드는 삭제하지 않는다. 연동된 교수가 없으면 아무 일도 하지 않는다
+     */
+    @Transactional
+    public void unlinkMember(Long memberId) {
+        professorRepository.findByMemberId(memberId)
+                .ifPresent(Professor::unlinkMember);
+    }
 }

@@ -15,4 +15,7 @@ public interface CoffeeChatRepository extends JpaRepository<CoffeeChat, Long> {
     Optional<CoffeeChat> findByResearcherMemberId(Long memberId);
 
     boolean existsByResearcherMemberId(Long memberId);
+
+    // 회원 탈퇴: 연구자의 커피챗 삭제 (연구자당 1개)
+    void deleteByResearcherId(Long researcherId);
 }

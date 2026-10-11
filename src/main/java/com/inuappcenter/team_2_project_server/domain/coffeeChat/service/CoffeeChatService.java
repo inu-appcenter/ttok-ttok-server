@@ -113,4 +113,11 @@ public class CoffeeChatService {
             throw new MyException(ErrorCode.ACCESS_DENIED);
         }
     }
+
+    /**
+     * 연구자의 커피챗 삭제 (회원 탈퇴용). 커피챗이 없으면 아무 일도 하지 않는다
+     */
+    public void deleteByResearcherId(Long researcherId) {
+        coffeeChatRepository.deleteByResearcherId(researcherId);
+    }
 }

@@ -160,14 +160,27 @@ public class MemberService {
 
 
     /**
-     * 유저 삭제
+     * 유저 삭제 (회원 탈퇴)
+     * 회원을 참조하는 데이터를 하나의 트랜잭션에서 먼저 정리한 뒤 회원을 지운다. (FK 제약 때문에 바로 지우면 실패한다)
+     * 같은 트랜잭션 안에서 수정(리뷰 익명화, 교수 연동 해제)이 삭제보다 먼저 반영되고, 삭제는 호출한 순서대로 실행된다.
      */
     @Transactional
     public void deleteMember(Long memberId) {
         Member member = memberRepository.findById(memberId)
                 .orElseThrow(() -> new MyException(ErrorCode.MEMBER_NOT_FOUND));
 
-        memberRepository.delete(member);
+        bookmarkService.deleteAllByMemberId(memberId);                // 1. 북마크 삭제
+
+
+        researcherService.findIdByMemberId(memberId).ifPresent(researcherId -> {
+            coffeeChatService.deleteByResearcherId(researcherId);     // 2. 커피챗 삭제
+            labReviewService.anonymizeByResearcherId(researcherId);   // 3. 리뷰 익명화 (작성자 연결만 끊음)
+            researcherService.delete(researcherId);                   // 4. 연구자 삭제
+        });
+
+        professorService.unlinkMember(memberId);                      // 5. 교수 레코드는 남기고 연동만 해제
+
+        memberRepository.delete(member);                              // 6. 회원 삭제
     }
 
     /**
