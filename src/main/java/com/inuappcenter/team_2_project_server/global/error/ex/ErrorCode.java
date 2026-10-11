@@ -48,7 +48,8 @@ public enum ErrorCode {
     PROFESSOR_NAME_AMBIGUOUS(HttpStatus.BAD_REQUEST, "PROFESSOR_NAME_AMBIGUOUS", "동일한 이름의 교수가 여러 명 있어 자동으로 연동할 수 없습니다."),
     PROFESSOR_ALREADY_HAS_LABORATORY(HttpStatus.BAD_REQUEST, "PROFESSOR_ALREADY_HAS_LABORATORY", "이미 본인 명의의 연구실이 있어 추가로 생성할 수 없습니다."),
     RECOMMENDATION_UNAVAILABLE(HttpStatus.SERVICE_UNAVAILABLE, "RECOMMENDATION_UNAVAILABLE", "연구실 추천을 일시적으로 사용할 수 없습니다. 잠시 후 다시 시도해 주세요."),
-    EMAIL_DRAFT_UNAVAILABLE(HttpStatus.SERVICE_UNAVAILABLE, "EMAIL_DRAFT_UNAVAILABLE", "메일 초안을 일시적으로 만들 수 없습니다. 잠시 후 다시 시도해 주세요.");
+    EMAIL_DRAFT_UNAVAILABLE(HttpStatus.SERVICE_UNAVAILABLE, "EMAIL_DRAFT_UNAVAILABLE", "메일 초안을 일시적으로 만들 수 없습니다. 잠시 후 다시 시도해 주세요."),
+    ALREADY_PROFESSOR(HttpStatus.BAD_REQUEST, "ALREADY_PROFESSOR", "교수는 연구자가 될 수 없습니다.");
 
     private final HttpStatus status;
     private final String code;
