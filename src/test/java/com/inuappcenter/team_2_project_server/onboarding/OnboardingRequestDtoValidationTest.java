@@ -39,7 +39,8 @@ class OnboardingRequestDtoValidationTest {
     void researcher_fields_are_required() {
         assertThat(invalidFields(new OnboardingRequestDto(
                 UserType.RESEARCHER, null, null,
-                null, Department.COMPUTER_ENGINEERING, null, null, null, false, null, null
+                null, null, null, null, false, null, null,
+                Department.COMPUTER_ENGINEERING
         ))).containsExactly("researcherFieldsPresent");
     }
 
@@ -60,7 +61,8 @@ class OnboardingRequestDtoValidationTest {
     private OnboardingRequestDto finder(Department department) {
         return new OnboardingRequestDto(
                 UserType.FINDER, null, null,
-                null, department, null, null, null, false, null, null
+                null, null, null, null, false, null, null,
+                department
         );
     }
 }

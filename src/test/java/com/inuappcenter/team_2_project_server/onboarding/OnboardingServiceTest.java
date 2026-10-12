@@ -100,7 +100,8 @@ class OnboardingServiceTest {
 
         MemberResponseDto response = onboardingService.complete(1L, new OnboardingRequestDto(
                 UserType.FINDER, null, null,
-                null, Department.KOREAN, null, null, null, false, null, null
+                null, null, null, null, false, null, null,
+                Department.KOREAN
         ));
 
         assertThat(response.userType()).isEqualTo(UserType.FINDER);
@@ -157,10 +158,11 @@ class OnboardingServiceTest {
     private OnboardingRequestDto researcherRequest(boolean coffeeChatAllowed) {
         return new OnboardingRequestDto(
                 UserType.RESEARCHER, null, null,
-                465L, Department.COMPUTER_ENGINEERING, "있음", "주 1회", Set.of("논문 리딩"),
+                465L, "있음", "주 1회", Set.of("논문 리딩"),
                 coffeeChatAllowed,
                 coffeeChatAllowed ? ContactType.KAKAO_TALK : null,
-                coffeeChatAllowed ? "https://open.kakao.com/o/abcd1234" : null
+                coffeeChatAllowed ? "https://open.kakao.com/o/abcd1234" : null,
+                Department.COMPUTER_ENGINEERING
         );
     }
 }
