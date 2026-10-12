@@ -1,7 +1,7 @@
 package com.inuappcenter.team_2_project_server.domain.onboarding.dto;
 
-import com.inuappcenter.team_2_project_server.domain.department.enums.Department;
 import com.inuappcenter.team_2_project_server.domain.coffeeChat.enums.ContactType;
+import com.inuappcenter.team_2_project_server.domain.department.enums.Department;
 import com.inuappcenter.team_2_project_server.domain.member.enums.UserType;
 import jakarta.validation.constraints.AssertTrue;
 import jakarta.validation.constraints.NotNull;
@@ -32,7 +32,9 @@ public record OnboardingRequestDto(
         // 커피챗 (RESEARCHER 이면서 허용한 경우에만)
         Boolean coffeeChatAllowed,
         ContactType contactType,
-        String contactValue
+        String contactValue,
+
+        Department department
 ) {
 
     @AssertTrue(message = "교수 온보딩에는 본인 학과와 이름이 필요합니다.")
@@ -41,6 +43,15 @@ public record OnboardingRequestDto(
             return true;
         }
         return professorDepartment != null && professorName != null && !professorName.isBlank();
+    }
+
+    @AssertTrue(message = "학과 정보가 필요합니다.")
+    public boolean isStudentDepartmentPresent() {
+        if (purpose == UserType.PROFESSOR) {
+            return true;
+        }
+
+        return department != null;
     }
 
     @AssertTrue(message = "연구생 온보딩에는 연구실, 코어타임, 미팅 빈도, 하는 일이 모두 필요합니다.")

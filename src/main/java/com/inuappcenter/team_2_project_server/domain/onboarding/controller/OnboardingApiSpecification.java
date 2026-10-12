@@ -25,9 +25,14 @@ public interface OnboardingApiSpecification {
                     온보딩에서 선택한 답변을 한 번에 받아 저장하고, 회원의 isNew 플래그를 false 로 내립니다.
                     전체가 하나의 트랜잭션이라 도중에 하나라도 실패하면 아무것도 저장되지 않습니다.
 
-                    - purpose = RESEARCHER: 소속 연구실로 연구자 등록 + 연구실 리뷰 저장, coffeeChatAllowed 가 true 면 커피챗까지 생성
-                    - purpose = FINDER: 별도 저장 없이 온보딩만 완료 (laboratoryId 등 나머지 필드는 무시)
-                    - purpose = PROFESSOR: 교수 계정(로그인 시 학번/교번 자릿수로 자동 분류됨)이 사용. 다른 필드는 다 무시하고
+                    회원 유형이 정해지는 시점이 다릅니다.
+                    - 교수: 로그인 시점에 교번(8자리)으로 이미 PROFESSOR 로 정해져 있습니다. 온보딩에서는 교수 레코드 연동만 합니다.
+                    - 학생: 온보딩에서 고른 purpose(RESEARCHER / FINDER)로 유형이 정해집니다. 학생은 department(본인 학과)가 필수입니다.
+                      학생 계정이 purpose = PROFESSOR 를 보내면 INVALID_INPUT(400)으로 거절합니다.
+
+                    - purpose = RESEARCHER: 학과 저장 + 소속 연구실로 연구자 등록 + 연구실 리뷰 저장, coffeeChatAllowed 가 true 면 커피챗까지 생성
+                    - purpose = FINDER: 학과만 저장하고 온보딩 완료 (laboratoryId 등 나머지 필드는 무시)
+                    - purpose = PROFESSOR: 교수 계정이 사용. department 등 다른 필드는 다 무시하고
                       professorDepartment + professorName 으로 아직 아무 계정과도 연동되지 않은 교수 레코드를 찾아 자동으로 연동합니다
                       (이름만으로는 동명이인이 있을 수 있어 학과까지 받습니다). 연동되는 순간 그 교수가 담당하는 연구실의 수정 권한도 함께 생기고,
                       회원의 department 도 이 값으로 채워집니다. 그래도 같은 학과에 동명이인이 있으면 자동 연동에 실패합니다.
@@ -45,6 +50,7 @@ public interface OnboardingApiSpecification {
                             @ExampleObject(name = "연구생 + 커피챗 허용", value = """
                                     {
                                       "purpose": "RESEARCHER",
+                                      "department": "COMPUTER_ENGINEERING",
                                       "laboratoryId": 465,
                                       "coreTime": "있음",
                                       "weeklyMeeting": "주 1회",
@@ -57,6 +63,7 @@ public interface OnboardingApiSpecification {
                             @ExampleObject(name = "연구생 + 커피챗 미허용", value = """
                                     {
                                       "purpose": "RESEARCHER",
+                                      "department": "COMPUTER_ENGINEERING",
                                       "laboratoryId": 465,
                                       "coreTime": "없음",
                                       "weeklyMeeting": "격주",
@@ -67,6 +74,7 @@ public interface OnboardingApiSpecification {
                             @ExampleObject(name = "연구실 탐색만 (FINDER)", value = """
                                     {
                                       "purpose": "FINDER",
+                                      "department": "KOREAN",
                                       "coffeeChatAllowed": false
                                     }
                                     """),
@@ -107,7 +115,7 @@ public interface OnboardingApiSpecification {
             ),
             @ApiResponse(
                     responseCode = "400",
-                    description = "요청 값 검증 실패 / 이미 온보딩 완료 / 이미 등록된 연구자 / 이미 작성한 리뷰 / 이미 생성한 커피챗 / 학과+이름과 일치하는 교수 없음 또는 동명이인으로 자동 연동 실패",
+                    description = "요청 값 검증 실패(학생 학과 누락, 연구생 필드 누락 등) / 학생 계정의 PROFESSOR 선택 / 이미 온보딩 완료 / 이미 등록된 연구자 / 이미 작성한 리뷰 / 이미 생성한 커피챗 / 학과+이름과 일치하는 교수 없음 또는 동명이인으로 자동 연동 실패",
                     content = @Content(
                             mediaType = "application/json",
                             schema = @Schema(implementation = ResponseDto.class),
@@ -119,6 +127,16 @@ public interface OnboardingApiSpecification {
                                                       "data": null,
                                                       "code": "ONBOARDING_ALREADY_DONE",
                                                       "message": "이미 온보딩을 완료했습니다."
+                                                    }
+                                                    """
+                                    ),
+                                    @ExampleObject(
+                                            name = "학생 계정이 PROFESSOR 선택",
+                                            value = """
+                                                    {
+                                                      "data": null,
+                                                      "code": "INVALID_INPUT",
+                                                      "message": "잘못된 요청입니다."
                                                     }
                                                     """
                                     ),
