@@ -36,7 +36,7 @@ class LaboratoryServiceSearchTest {
                 mock(ProfessorService.class),
                 mock(ResearcherService.class)
         );
-        given(laboratoryRepository.searchByFilter(anyBoolean(), anyList(), any(), any(), anyString(), anyList(), any()))
+        given(laboratoryRepository.searchByFilter(anyBoolean(), anyList(), any(), any(), anyString(), any()))
                 .willReturn(Page.empty());
     }
 
@@ -44,21 +44,21 @@ class LaboratoryServiceSearchTest {
     void no_condition_searches_all() {
         laboratoryService.searchLabs(null, null, null, null, pageable);
 
-        verify(laboratoryRepository).searchByFilter(true, List.of(), null, null, "", List.of(), pageable);
+        verify(laboratoryRepository).searchByFilter(true, List.of(), null, null, "", pageable);
     }
 
     @Test
     void categories_are_trimmed_and_blank_or_duplicated_values_removed() {
         laboratoryService.searchLabs(null, Arrays.asList(" AI ", "", "  ", null, "AI", "보안"), null, null, pageable);
 
-        verify(laboratoryRepository).searchByFilter(false, List.of("AI", "보안"), null, null, "", List.of(), pageable);
+        verify(laboratoryRepository).searchByFilter(false, List.of("AI", "보안"), null, null, "", pageable);
     }
 
     @Test
     void only_blank_categories_means_all() {
         laboratoryService.searchLabs(null, List.of(" ", ""), null, null, pageable);
 
-        verify(laboratoryRepository).searchByFilter(true, List.of(), null, null, "", List.of(), pageable);
+        verify(laboratoryRepository).searchByFilter(true, List.of(), null, null, "", pageable);
     }
 
     @Test
@@ -66,36 +66,28 @@ class LaboratoryServiceSearchTest {
         laboratoryService.searchLabs(null, null, " 정보기술대학 ", " 컴퓨터공학부 ", pageable);
 
         verify(laboratoryRepository).searchByFilter(
-                true, List.of(), College.COLLEGE_OF_INFORMATION_TECHNOLOGY, Department.COMPUTER_ENGINEERING, "", List.of(), pageable);
+                true, List.of(), College.COLLEGE_OF_INFORMATION_TECHNOLOGY, Department.COMPUTER_ENGINEERING, "", pageable);
     }
 
     @Test
     void keyword_whitespace_is_removed_and_lowercased() {
         laboratoryService.searchLabs("  Deep  Learning\t랩 ", null, null, null, pageable);
 
-        verify(laboratoryRepository).searchByFilter(true, List.of(), null, null, "deeplearning랩", List.of(), pageable);
+        verify(laboratoryRepository).searchByFilter(true, List.of(), null, null, "deeplearning랩", pageable);
     }
 
     @Test
     void blank_keyword_means_all() {
         laboratoryService.searchLabs("   ", null, null, null, pageable);
 
-        verify(laboratoryRepository).searchByFilter(true, List.of(), null, null, "", List.of(), pageable);
+        verify(laboratoryRepository).searchByFilter(true, List.of(), null, null, "", pageable);
     }
 
     @Test
     void like_wildcards_in_keyword_are_escaped() {
         laboratoryService.searchLabs("a%b_c\\", null, null, null, pageable);
 
-        verify(laboratoryRepository).searchByFilter(true, List.of(), null, null, "a\\%b\\_c\\\\", List.of(), pageable);
-    }
-
-    @Test
-    void keyword_finds_departments_by_korean_name_ignoring_whitespace() {
-        laboratoryService.searchLabs("컴퓨터 공학", null, null, null, pageable);
-
-        verify(laboratoryRepository).searchByFilter(
-                true, List.of(), null, null, "컴퓨터공학", List.of(Department.COMPUTER_ENGINEERING), pageable);
+        verify(laboratoryRepository).searchByFilter(true, List.of(), null, null, "a\\%b\\_c\\\\", pageable);
     }
 
     @Test
@@ -105,7 +97,7 @@ class LaboratoryServiceSearchTest {
                 .extracting("errorCode")
                 .isEqualTo(ErrorCode.INVALID_INPUT);
 
-        verify(laboratoryRepository, never()).searchByFilter(anyBoolean(), anyList(), any(), any(), anyString(), anyList(), eq(pageable));
+        verify(laboratoryRepository, never()).searchByFilter(anyBoolean(), anyList(), any(), any(), anyString(), eq(pageable));
     }
 
     @Test
