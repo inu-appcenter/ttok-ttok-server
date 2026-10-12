@@ -42,44 +42,55 @@ public class OnboardingService {
             throw new MyException(ErrorCode.ONBOARDING_ALREADY_DONE);
         }
 
-        // 교수는 로그인 시점에 이미 PROFESSOR로 분류되어 있으므로 학생용 질문(purpose)을 보지 않고,
-        // 본인이 입력한 학과+이름으로 아직 연동 안 된 교수 레코드를 찾아 계정과 연결한다 (이름만으로는 동명이인 문제가 있어 학과까지 받음).
-        // 연결되는 순간 해당 교수가 담당하는 연구실 수정 권한도 자동으로 생긴다(Laboratory.professor.member 기준 검증)
         if (member.getUserType() == UserType.PROFESSOR) {
-            professorService.linkByDepartmentAndName(member, request.professorDepartment(), request.professorName());
-            member.updateMemberProfile(null, request.professorDepartment(), null);
-
-            member.updateIsNew();
-            return MemberResponseDto.from(member);
+            completeProfessor(member, request);
+        } else {
+            completeStudent(member, request);
         }
 
-        member.assignUserType(request.purpose());
-
-        // 학부연구생이라면 아래 로직을 거침
-        if (request.purpose() == UserType.RESEARCHER) {
-            // 연구자 등록 (온보딩에서는 실명을 받지 않으므로 name 은 null)
-            researcherService.register(memberId, request.laboratoryId(), null);
-
-            // 연구실 리뷰 작성
-            labReviewService.submit(memberId, new LabReviewRequestDto(
-                    request.coreTime(),
-                    request.weeklyMeeting(),
-                    request.doings()
-            ));
-
-            // 커피챗 작성
-            if (Boolean.TRUE.equals(request.coffeeChatAllowed())) {
-                coffeeChatService.createCoffeeChat(memberId, new CoffeeChatCreateRequestDto(
-                        request.laboratoryId(),
-                        request.contactType(),
-                        request.contactValue()
-                ));
-            }
-        }
-
-        // FINDER는 바로 온보딩 완료 처리
         member.updateIsNew();
-
         return MemberResponseDto.from(member);
+    }
+
+    // 교수: 학과 + 이름으로 아직 연동 안 된 교수 레코드를 찾아 계정과 연결
+    // 교수는 로그인할 떄 UserType이 결정됨(학번이 8자리)
+    private void completeProfessor(Member member, OnboardingRequestDto request) {
+        professorService.linkByDepartmentAndName(member, request.professorDepartment(), request.professorName());
+        member.updateMemberProfile(null, request.professorDepartment(), null);
+    }
+
+    // 연구생: 연구자 등록 + 연구실 리뷰 + (허용 시) 커피챗
+    private void completeResearcher(Long memberId, OnboardingRequestDto request) {
+        // 연구자 등록 (온보딩에서는 실명을 받지 않으므로 name 은 null)
+        researcherService.register(memberId, request.laboratoryId(), null);
+
+        // 연구실 리뷰 작성
+        labReviewService.submit(memberId, new LabReviewRequestDto(
+                request.coreTime(),
+                request.weeklyMeeting(),
+                request.doings()
+        ));
+
+        // 커피챗 작성
+        if (Boolean.TRUE.equals(request.coffeeChatAllowed())) {
+            coffeeChatService.createCoffeeChat(memberId, new CoffeeChatCreateRequestDto(
+                    request.laboratoryId(),
+                    request.contactType(),
+                    request.contactValue()
+            ));
+        }
+    }
+
+    // 학생: 고른 목적(purpose)으로 유형을 정하고, 연구생이면 추가 등록
+    private void completeStudent(Member member, OnboardingRequestDto request) {
+        member.assignUserType(request.purpose());
+        member.updateMemberProfile(null, request.department(), null);
+
+        switch (request.purpose()) {
+            case RESEARCHER -> completeResearcher(member.getId(), request);
+            case FINDER -> {
+            }   // 추가로 입력받는 정보 없음
+            case PROFESSOR -> throw new MyException(ErrorCode.INVALID_INPUT);   // 교수 유형은 교번 로그인으로만 정해진다
+        }
     }
 }

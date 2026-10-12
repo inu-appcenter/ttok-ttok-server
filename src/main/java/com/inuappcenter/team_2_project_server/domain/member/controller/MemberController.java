@@ -103,7 +103,7 @@ public class MemberController implements MemberApiSpecification {
     }
 
     /**
-     * 유저 프로필 수정 컨트롤러
+     * 내 프로필 수정 컨트롤러
      */
     @PatchMapping
     public ResponseEntity<ResponseDto<MemberResponseDto>> updateMember(
@@ -124,7 +124,7 @@ public class MemberController implements MemberApiSpecification {
     ) {
         memberService.deleteMember(member.getId());
         log.info(member.getId() + " 유저가 삭제되었습니다.");
-        return ResponseEntity.ok(ResponseDto.of(member.getId(), "유저 삭제 성공"));
+        return ResponseEntity.ok(ResponseDto.of(member.getId(), member.getId() + "번 유저 삭제 성공"));
     }
 
     /**
