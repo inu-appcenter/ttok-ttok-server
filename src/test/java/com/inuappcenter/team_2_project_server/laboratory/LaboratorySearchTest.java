@@ -106,21 +106,21 @@ class LaboratorySearchTest {
     }
 
     @Test
-    void keyword_matches_research_area_name() {
-        assertThat(search("컴퓨터비전", null, null, null))
-                .containsExactly("비전랩");
+    void keyword_does_not_match_research_area_name() {
+        assertThat(search("컴퓨터비전", null, null, null)).isEmpty();
     }
 
     @Test
-    void keyword_matches_category_name() {
-        assertThat(search("보안", null, null, null))
-                .containsExactly("암호 연구실");
+    void keyword_does_not_match_category_name() {
+        // 분야는 키워드가 아니라 카테고리 필터로 거른다
+        assertThat(search("보안", null, null, null)).isEmpty();
+        assertThat(search(null, List.of("보안"), null, null)).containsExactly("암호 연구실");
     }
 
     @Test
-    void keyword_matches_department_name() {
-        assertThat(search("기계", null, null, null))
-                .containsExactly("로봇 연구실");
+    void keyword_does_not_match_department_name() {
+        // 학과는 키워드가 아니라 학과 필터로 거른다
+        assertThat(search("기계", null, null, null)).isEmpty();
     }
 
     @Test

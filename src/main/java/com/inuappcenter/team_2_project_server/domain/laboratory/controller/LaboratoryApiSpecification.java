@@ -498,7 +498,7 @@ public interface LaboratoryApiSpecification {
                       여러 개를 보내면 그중 하나라도 해당하는 연구실이 조회됩니다.
                     - 학과 드롭다운에서 특정 학과 선택 시 department, '단과대 전체' 선택 시 college 만 보냅니다.
                     - college/department 는 코드가 아닌 한글 이름으로 보냅니다. (단과대/학과 조회 API 응답의 collegeName, departmentName 값)
-                    - keyword 는 연구실명, 교수명, 학과명, 세부 연구분야명, 카테고리명 중 하나라도 포함하면 조회됩니다.
+                    - keyword 는 연구실명, 교수명 중 하나라도 포함하면 조회됩니다. 분야/학과는 category, department 필터로 거릅니다.
                       대소문자와 공백은 무시합니다. ("인공지능 연구실" 과 "인공지능연구실" 은 같은 결과)
                     - 존재하지 않는 단과대/학과 이름이면 400(INVALID_INPUT)을 반환합니다.
                     page(0-based), 한 페이지당 20건으로 고정입니다.
@@ -558,7 +558,7 @@ public interface LaboratoryApiSpecification {
             )
     })
     ResponseEntity<ResponseDto<PageResponseDto<LaboratoryResponseDto>>> searchLaboratory(
-            @Parameter(description = "연구실명/교수명/학과명/세부 연구분야명/카테고리명 검색어 (선택, 공백 무시 부분일치)", example = "홍길동")
+            @Parameter(description = "연구실명/교수명 검색어 (선택, 공백 무시 부분일치)", example = "홍길동")
             @RequestParam(required = false) String keyword,
             @Parameter(description = "연구분야 카테고리 이름 (선택, 여러 개 가능: category=AI&category=보안)", example = "AI")
             @RequestParam(required = false) List<String> category,
