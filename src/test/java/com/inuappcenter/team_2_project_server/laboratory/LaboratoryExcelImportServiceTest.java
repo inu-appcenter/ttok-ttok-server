@@ -28,6 +28,7 @@ import org.springframework.mock.web.MockMultipartFile;
 import java.util.List;
 import java.util.Optional;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
@@ -80,7 +81,7 @@ class LaboratoryExcelImportServiceTest {
                 "홍길동",
                 "hong@inu.ac.kr"
         )).willReturn(professor);
-        given(laboratoryRepository.existsByProfessorId(professor.getId())).willReturn(false);
+        given(laboratoryRepository.findByProfessorId(professor.getId())).willReturn(Optional.empty());
         given(researchKeywordRepository.findByArea("인공지능")).willReturn(Optional.empty());
         given(researchKeywordRepository.save(any(ResearchArea.class))).willReturn(researchArea);
         given(laboratoryResearchKeywordRepository.existsByLaboratoryAndResearchKeyword(
@@ -100,11 +101,13 @@ class LaboratoryExcelImportServiceTest {
     }
 
     @Test
-    void importExcel_skips_laboratory_when_professor_already_has_laboratory() {
+    void importExcel_updates_existing_laboratory_with_excel_values() {
         MockMultipartFile file = excelFile();
         ProfessorExcelRow professorRow = professorRow("인공지능");
         LaboratoryExcelRow laboratoryRow = laboratoryRow();
         Professor professor = professor();
+        Laboratory laboratory = laboratory(professor);
+        ResearchArea researchArea = ResearchArea.create("인공지능");
 
         given(excelLabParser.parseProfessors(file)).willReturn(List.of(professorRow));
         given(excelLabParser.parseLaboratories(file)).willReturn(List.of(laboratoryRow));
@@ -113,13 +116,50 @@ class LaboratoryExcelImportServiceTest {
                 "홍길동",
                 "hong@inu.ac.kr"
         )).willReturn(professor);
-        // 엑셀의 연구실명이 기존과 달라도 교수 명의 연구실이 이미 있으면 새로 만들지 않는다
-        given(laboratoryRepository.existsByProfessorId(professor.getId())).willReturn(true);
+        // 교수 명의 연구실이 이미 있으면 새로 만들지 않고 엑셀 값으로 갱신한다
+        given(laboratoryRepository.findByProfessorId(professor.getId())).willReturn(Optional.of(laboratory));
+        given(laboratoryResearchKeywordRepository.findAllByLaboratory(laboratory)).willReturn(List.of());
+        given(researchKeywordRepository.findByArea("인공지능")).willReturn(Optional.of(researchArea));
+        given(laboratoryResearchKeywordRepository.existsByLaboratoryAndResearchKeyword(laboratory, researchArea))
+                .willReturn(false);
 
         laboratoryExcelImportService.importExcel(file);
 
         verify(laboratoryRepository, never()).save(any(Laboratory.class));
-        verify(researchKeywordRepository, never()).findByArea(anyString());
+        assertThat(laboratory.getIntroduction()).isEqualTo("인공지능을 연구합니다.");
+        assertThat(laboratory.getResearchFieldRaw()).isEqualTo("인공지능");
+        verify(laboratoryResearchKeywordRepository).save(any(LaboratoryResearchArea.class));
+    }
+
+    @Test
+    void importExcel_removes_research_keyword_links_missing_from_excel() {
+        MockMultipartFile file = excelFile();
+        ProfessorExcelRow professorRow = professorRow("인공지능");
+        LaboratoryExcelRow laboratoryRow = laboratoryRow();
+        Professor professor = professor();
+        Laboratory laboratory = laboratory(professor);
+        ResearchArea keptArea = ResearchArea.create("인공지능");
+        LaboratoryResearchArea keptLink = LaboratoryResearchArea.create(laboratory, keptArea);
+        LaboratoryResearchArea staleLink = LaboratoryResearchArea.create(laboratory, ResearchArea.create("로보틱스"));
+
+        given(excelLabParser.parseProfessors(file)).willReturn(List.of(professorRow));
+        given(excelLabParser.parseLaboratories(file)).willReturn(List.of(laboratoryRow));
+        given(professorService.getByDepartmentAndNameAndEmail(
+                Department.COMPUTER_ENGINEERING,
+                "홍길동",
+                "hong@inu.ac.kr"
+        )).willReturn(professor);
+        given(laboratoryRepository.findByProfessorId(professor.getId())).willReturn(Optional.of(laboratory));
+        given(laboratoryResearchKeywordRepository.findAllByLaboratory(laboratory))
+                .willReturn(List.of(keptLink, staleLink));
+        given(researchKeywordRepository.findByArea("인공지능")).willReturn(Optional.of(keptArea));
+        given(laboratoryResearchKeywordRepository.existsByLaboratoryAndResearchKeyword(laboratory, keptArea))
+                .willReturn(true);
+
+        laboratoryExcelImportService.importExcel(file);
+
+        // 엑셀에서 빠진 키워드(로보틱스) 연결만 끊고, 남아 있는 키워드(인공지능)는 그대로 둔다
+        verify(laboratoryResearchKeywordRepository).deleteAll(List.of(staleLink));
         verify(laboratoryResearchKeywordRepository, never()).save(any(LaboratoryResearchArea.class));
     }
 

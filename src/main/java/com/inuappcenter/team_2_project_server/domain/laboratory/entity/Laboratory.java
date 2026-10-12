@@ -135,4 +135,25 @@ public class Laboratory extends BaseEntity {
             this.researchFieldRaw = researchFieldRaw;
         }
     }
+
+    /**
+     * 엑셀 재import 시 엑셀을 원본으로 보고 값을 그대로 덮어쓴다. (빈 칸이면 null로 비워진다)
+     */
+    public void updateFromExcel(
+            String labName,
+            String location,
+            Integer graduateStudentCount,
+            Integer undergraduateStudentCount,
+            String introduction,
+            String labUrl,
+            String researchFieldRaw
+    ) {
+        this.labName = labName;
+        this.location = location;
+        this.graduateStudentCount = graduateStudentCount;
+        this.undergraduateStudentCount = undergraduateStudentCount;
+        this.introduction = introduction;
+        this.labUrl = labUrl;
+        this.researchFieldRaw = researchFieldRaw;
+    }
 }

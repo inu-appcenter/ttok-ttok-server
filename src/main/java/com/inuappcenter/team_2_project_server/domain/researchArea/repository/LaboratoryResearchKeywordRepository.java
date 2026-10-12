@@ -5,6 +5,10 @@ import com.inuappcenter.team_2_project_server.domain.researchArea.entity.Laborat
 import com.inuappcenter.team_2_project_server.domain.researchArea.entity.ResearchArea;
 import org.springframework.data.jpa.repository.JpaRepository;
 
+import java.util.List;
+
 public interface LaboratoryResearchKeywordRepository extends JpaRepository<LaboratoryResearchArea, Long> {
     boolean existsByLaboratoryAndResearchKeyword(Laboratory laboratory, ResearchArea researchKeyword);
+
+    List<LaboratoryResearchArea> findAllByLaboratory(Laboratory laboratory);
 }
