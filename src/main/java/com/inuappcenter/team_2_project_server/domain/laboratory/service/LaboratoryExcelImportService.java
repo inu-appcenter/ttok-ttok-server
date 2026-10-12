@@ -27,6 +27,7 @@ import org.springframework.web.multipart.MultipartFile;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 /**
@@ -96,8 +97,21 @@ public class LaboratoryExcelImportService {
 
             String researchFieldRaw = professorInfo.researchAreaRaw();
 
-            // 교수 한 명당 연구실은 하나라, 이미 명의로 된 연구실이 있으면 연구실명이 달라도 새로 만들지 않는다
-            if (laboratoryRepository.existsByProfessorId(professor.getId())) {
+            // 교수 한 명당 연구실은 하나라, 이미 명의로 된 연구실이 있으면 새로 만들지 않고 엑셀 값으로 갱신한다
+            Optional<Laboratory> existing = laboratoryRepository.findByProfessorId(professor.getId());
+            if (existing.isPresent()) {
+                Laboratory laboratory = existing.get();
+                laboratory.updateFromExcel(
+                        row.labName(),
+                        row.location(),
+                        row.capacity().graduateStudentCount(),
+                        row.capacity().undergraduateStudentCount(),
+                        row.introduction(),
+                        row.labUrl(),
+                        researchFieldRaw
+                );
+                removeStaleResearchKeywords(laboratory, researchFieldRaw);
+                saveResearchKeywords(laboratory, researchFieldRaw);
                 continue;
             }
 
@@ -156,6 +170,20 @@ public class LaboratoryExcelImportService {
                 );
             }
         }
+    }
+
+    /**
+     * 엑셀 연구분야에서 빠진 키워드는 연구실과의 연결을 끊는다 (키워드 자체는 다른 연구실이 쓸 수 있어 남긴다)
+     */
+    private void removeStaleResearchKeywords(Laboratory laboratory, String researchFieldRaw) {
+        List<String> keywordNames = splitResearchKeywords(researchFieldRaw);
+
+        List<LaboratoryResearchArea> staleLinks = laboratoryResearchKeywordRepository.findAllByLaboratory(laboratory)
+                .stream()
+                .filter(link -> !keywordNames.contains(link.getResearchKeyword().getArea()))
+                .toList();
+
+        laboratoryResearchKeywordRepository.deleteAll(staleLinks);
     }
 
     // 엑셀 원문 데이터를 쪼개는 메서드
