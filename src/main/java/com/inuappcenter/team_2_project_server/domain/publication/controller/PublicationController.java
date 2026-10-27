@@ -12,11 +12,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 // URL은 연구실 하위 리소스(/api/laboratory/{laboratoryId}/publications)라 기존 경로를 그대로 유지
 @RestController
@@ -31,7 +27,7 @@ public class PublicationController implements PublicationApiSpecification {
             @PathVariable Long laboratoryId,
             @RequestParam(defaultValue = "0") int page
     ) {
-        Pageable pageable = PageRequest.of(validatePage(page), 5, Sort.by(Sort.Direction.DESC, "year"));
+        Pageable pageable = PageRequest.of(validatePage(page), 5, Sort.by(Sort.Direction.DESC, "year", "id"));
         Page<PublicationResponseDto> result = publicationService.getLabPublications(laboratoryId, pageable);
         return ResponseEntity.ok(
                 ResponseDto.of(PageResponseDto.from(result), "연구실 논문 목록 조회 성공")
