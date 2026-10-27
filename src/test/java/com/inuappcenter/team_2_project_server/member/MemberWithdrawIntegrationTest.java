@@ -80,7 +80,7 @@ class MemberWithdrawIntegrationTest {
     @Test
     void researcher_withdrawal_deletes_own_data_and_keeps_review_anonymously() {
         Member member = memberRepository.save(Member.create("209900001", "연구생", null, null));
-        Researcher researcher = researcherRepository.save(Researcher.create(member, laboratory, "연구생"));
+        Researcher researcher = researcherRepository.save(Researcher.create(member, laboratory));
         CoffeeChat coffeeChat = coffeeChatRepository.save(CoffeeChat.create(laboratory, researcher, ContactType.EMAIL, "r@inu.ac.kr"));
         LabReview review = labReviewRepository.save(LabReview.create(laboratory, researcher, "있음", "주 1회", Set.of("논문 리딩")));
         Bookmark bookmark = bookmarkRepository.save(Bookmark.create(member, laboratory));

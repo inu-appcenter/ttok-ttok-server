@@ -25,9 +25,7 @@ import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyLong;
-import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.*;
 
@@ -78,7 +76,7 @@ class OnboardingServiceTest {
         assertThat(response.userType()).isEqualTo(UserType.RESEARCHER);
         assertThat(response.department()).isEqualTo(Department.COMPUTER_ENGINEERING);
         assertThat(response.isNew()).isFalse();
-        verify(researcherService).register(1L, 465L, null);
+        verify(researcherService).register(1L, 465L);
         verify(labReviewService).submit(eq(1L), any(LabReviewRequestDto.class));
         verify(coffeeChatService).createCoffeeChat(eq(1L), any(CoffeeChatCreateRequestDto.class));
         verifyNoInteractions(professorService);
@@ -90,7 +88,7 @@ class OnboardingServiceTest {
 
         onboardingService.complete(1L, researcherRequest(false));
 
-        verify(researcherService).register(1L, 465L, null);
+        verify(researcherService).register(1L, 465L);
         verify(coffeeChatService, never()).createCoffeeChat(anyLong(), any());
     }
 
