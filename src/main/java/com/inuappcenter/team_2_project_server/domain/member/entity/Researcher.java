@@ -29,26 +29,21 @@ public class Researcher extends BaseEntity {
     @JoinColumn(name = "laboratory_id", nullable = false)
     Laboratory laboratory;
 
-    String name;
-
     private Researcher(
             Member member,
-            Laboratory laboratory,
-            String name
+            Laboratory laboratory
     ) {
         this.member = member;
         this.laboratory = laboratory;
-        this.name = name;
     }
 
     public static Researcher create(
             Member member,
-            Laboratory laboratory,
-            String name
+            Laboratory laboratory
     ) {
         if (laboratory == null) {
             throw new MyException(ErrorCode.LABORATORY_NOT_FOUND);
         }
-        return new Researcher(member, laboratory, name);
+        return new Researcher(member, laboratory);
     }
 }
