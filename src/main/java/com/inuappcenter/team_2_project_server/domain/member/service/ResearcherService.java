@@ -1,5 +1,7 @@
 package com.inuappcenter.team_2_project_server.domain.member.service;
 
+import com.inuappcenter.team_2_project_server.domain.coffeeChat.service.CoffeeChatService;
+import com.inuappcenter.team_2_project_server.domain.labReview.service.LabReviewService;
 import com.inuappcenter.team_2_project_server.domain.laboratory.entity.Laboratory;
 import com.inuappcenter.team_2_project_server.domain.laboratory.repository.LaboratoryRepository;
 import com.inuappcenter.team_2_project_server.domain.member.dto.response.ResearcherResponseDto;
@@ -24,12 +26,14 @@ public class ResearcherService {
     private final ResearcherRepository researcherRepository;
     private final MemberRepository memberRepository;
     private final LaboratoryRepository laboratoryRepository;
+    private final CoffeeChatService coffeeChatService;
+    private final LabReviewService labReviewService;
 
     /**
      * 연구자 등록
      */
     @Transactional
-    public ResearcherResponseDto register(Long memberId, Long laboratoryId, String name) {
+    public ResearcherResponseDto register(Long memberId, Long laboratoryId) {
         if (researcherRepository.existsByMemberId(memberId)) {
             throw new MyException(ErrorCode.RESEARCHER_ALREADY_EXISTS);
         }
@@ -44,7 +48,7 @@ public class ResearcherService {
         Laboratory laboratory = laboratoryRepository.findById(laboratoryId)
                 .orElseThrow(() -> new MyException(ErrorCode.LABORATORY_NOT_FOUND));
 
-        Researcher researcher = Researcher.create(member, laboratory, name);
+        Researcher researcher = Researcher.create(member, laboratory);
 
         member.assignUserType(UserType.RESEARCHER);
 
@@ -82,5 +86,21 @@ public class ResearcherService {
     @Transactional
     public void delete(Long researcherId) {
         researcherRepository.deleteById(researcherId);
+    }
+
+    /**
+     * 본인 연구자 등록 해제. 회원은 남기고 연구자 레코드만 지운다.
+     * 회원 탈퇴와 같은 순서로 커피챗 삭제, 리뷰 익명화를 먼저 하고 연구자를 지운 뒤 유저 타입을 FINDER로 되돌린다
+     */
+    @Transactional
+    public void deleteByMemberId(Long memberId) {
+        Researcher researcher = researcherRepository.findByMemberId(memberId)
+                .orElseThrow(() -> new MyException(ErrorCode.RESEARCHER_NOT_FOUND));
+
+        coffeeChatService.deleteByResearcherId(researcher.getId());
+        labReviewService.anonymizeByResearcherId(researcher.getId());
+        researcherRepository.delete(researcher);
+
+        researcher.getMember().assignUserType(UserType.FINDER);
     }
 }
