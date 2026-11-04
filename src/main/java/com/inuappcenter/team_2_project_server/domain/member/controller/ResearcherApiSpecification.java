@@ -5,7 +5,6 @@ import com.inuappcenter.team_2_project_server.domain.member.dto.response.Researc
 import com.inuappcenter.team_2_project_server.domain.member.entity.Member;
 import com.inuappcenter.team_2_project_server.global.dto.ResponseDto;
 import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.ExampleObject;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -16,7 +15,6 @@ import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestParam;
 
 @Tag(name = "연구자", description = "회원을 특정 연구실 소속 연구자로 등록·조회·해제하는 API")
 public interface ResearcherApiSpecification {
@@ -133,8 +131,8 @@ public interface ResearcherApiSpecification {
     );
 
     @Operation(
-            summary = "연구자 조회",
-            description = "회원 ID로 해당 회원의 연구자 등록 정보를 조회합니다."
+            summary = "내 연구자 정보 조회",
+            description = "인증된 유저 본인의 연구자 등록 정보를 조회합니다. 조회 대상 회원은 인증 토큰에서 가져옵니다."
     )
     @ApiResponses({
             @ApiResponse(
@@ -160,8 +158,23 @@ public interface ResearcherApiSpecification {
                     )
             ),
             @ApiResponse(
+                    responseCode = "401",
+                    description = "인증 토큰 누락, 만료 또는 유효하지 않은 토큰",
+                    content = @Content(
+                            mediaType = "application/json",
+                            schema = @Schema(implementation = ResponseDto.class),
+                            examples = @ExampleObject(value = """
+                                    {
+                                      "data": null,
+                                      "code": "TOKEN_INVALID",
+                                      "message": "유효하지 않은 토큰입니다."
+                                    }
+                                    """)
+                    )
+            ),
+            @ApiResponse(
                     responseCode = "404",
-                    description = "해당 회원의 연구자 등록 정보 없음",
+                    description = "연구자로 등록되어 있지 않은 유저",
                     content = @Content(
                             mediaType = "application/json",
                             schema = @Schema(implementation = ResponseDto.class),
@@ -176,8 +189,7 @@ public interface ResearcherApiSpecification {
             )
     })
     ResponseEntity<ResponseDto<ResearcherResponseDto>> getResearcher(
-            @Parameter(description = "조회할 회원 ID", required = true, example = "1")
-            @RequestParam Long memberId
+            @AuthenticationPrincipal Member member
     );
 
     @Operation(

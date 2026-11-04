@@ -169,18 +169,11 @@ public class MemberService {
         Member member = memberRepository.findById(memberId)
                 .orElseThrow(() -> new MyException(ErrorCode.MEMBER_NOT_FOUND));
 
+        // userType이 아니라 레코드 존재 여부로 정리한다 (userType과 실제 레코드가 어긋난 회원도 FK 에러 없이 탈퇴되도록)
         bookmarkService.deleteAllByMemberId(memberId);                // 1. 북마크 삭제
-
-
-        researcherService.findIdByMemberId(memberId).ifPresent(researcherId -> {
-            coffeeChatService.deleteByResearcherId(researcherId);     // 2. 커피챗 삭제
-            labReviewService.anonymizeByResearcherId(researcherId);   // 3. 리뷰 익명화 (작성자 연결만 끊음)
-            researcherService.delete(researcherId);                   // 4. 연구자 삭제
-        });
-
-        professorService.unlinkMember(memberId);                      // 5. 교수 레코드는 남기고 연동만 해제
-
-        memberRepository.delete(member);                              // 6. 회원 삭제
+        researcherService.deleteIfPresent(memberId);                  // 2. 연구자 정리 (커피챗 삭제, 리뷰 익명화, 연구자 삭제)
+        professorService.unlinkMember(memberId);                      // 3. 교수 레코드는 남기고 연동만 해제
+        memberRepository.delete(member);                              // 4. 회원 삭제
     }
 
     /**

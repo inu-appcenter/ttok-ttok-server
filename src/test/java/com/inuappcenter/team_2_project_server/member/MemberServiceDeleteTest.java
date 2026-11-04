@@ -20,7 +20,6 @@ import org.mockito.InOrder;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.*;
 
@@ -56,36 +55,19 @@ class MemberServiceDeleteTest {
     }
 
     @Test
-    void researcher_withdrawal_cleans_up_in_order_before_deleting_member() {
+    void withdrawal_cleans_up_in_order_before_deleting_member() {
         Member member = Member.create("202400001", "학생", null, null);
         given(memberRepository.findById(1L)).willReturn(Optional.of(member));
-        given(researcherService.findIdByMemberId(1L)).willReturn(Optional.of(10L));
 
         memberService.deleteMember(1L);
 
-        InOrder inOrder = inOrder(bookmarkService, coffeeChatService, labReviewService, researcherService, professorService, memberRepository);
+        // 연구자 정리(커피챗/리뷰 포함)는 ResearcherService가 담당하고, userType과 관계없이 항상 호출한다
+        InOrder inOrder = inOrder(bookmarkService, researcherService, professorService, memberRepository);
         inOrder.verify(bookmarkService).deleteAllByMemberId(1L);
-        inOrder.verify(coffeeChatService).deleteByResearcherId(10L);
-        inOrder.verify(labReviewService).anonymizeByResearcherId(10L);
-        inOrder.verify(researcherService).delete(10L);
+        inOrder.verify(researcherService).deleteIfPresent(1L);
         inOrder.verify(professorService).unlinkMember(1L);
         inOrder.verify(memberRepository).delete(member);
-    }
-
-    @Test
-    void non_researcher_withdrawal_skips_researcher_cleanup() {
-        Member member = Member.create("202400001", "학생", null, null);
-        given(memberRepository.findById(1L)).willReturn(Optional.of(member));
-        given(researcherService.findIdByMemberId(1L)).willReturn(Optional.empty());
-
-        memberService.deleteMember(1L);
-
-        verify(bookmarkService).deleteAllByMemberId(1L);
-        verify(coffeeChatService, never()).deleteByResearcherId(anyLong());
-        verify(labReviewService, never()).anonymizeByResearcherId(anyLong());
-        verify(researcherService, never()).delete(anyLong());
-        verify(professorService).unlinkMember(1L);
-        verify(memberRepository).delete(member);
+        verifyNoInteractions(coffeeChatService, labReviewService);
     }
 
     @Test
@@ -96,6 +78,6 @@ class MemberServiceDeleteTest {
                 .isInstanceOf(MyException.class)
                 .extracting("errorCode")
                 .isEqualTo(ErrorCode.MEMBER_NOT_FOUND);
-        verifyNoInteractions(bookmarkService, coffeeChatService, labReviewService, professorService);
+        verifyNoInteractions(bookmarkService, researcherService, coffeeChatService, labReviewService, professorService);
     }
 }
