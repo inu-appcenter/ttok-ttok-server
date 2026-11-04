@@ -39,13 +39,13 @@ public class ResearcherController implements ResearcherApiSpecification {
     }
 
     /**
-     * 연구자 조회 컨트롤러 (memberId 기준)
+     * 내가 연구자인지 조회하는 컨트롤러
      */
-    @GetMapping
+    @GetMapping("/me")
     public ResponseEntity<ResponseDto<ResearcherResponseDto>> getResearcher(
-            @RequestParam Long memberId
+            @AuthenticationPrincipal Member member
     ) {
-        ResearcherResponseDto response = researcherService.getByMemberId(memberId);
+        ResearcherResponseDto response = researcherService.getByMemberId(member.getId());
 
         return ResponseEntity.ok(
                 ResponseDto.of(response, "연구자 조회 성공")
@@ -59,7 +59,7 @@ public class ResearcherController implements ResearcherApiSpecification {
     public ResponseEntity<ResponseDto<Long>> deleteResearcher(
             @AuthenticationPrincipal Member member
     ) {
-        researcherService.deleteByMemberId(member.getId());
+        researcherService.unregister(member.getId());
         log.info(member.getId() + " 연구자가 삭제되었습니다.");
         return ResponseEntity.ok(ResponseDto.of(member.getId(), member.getId() + "번 유저 연구자 삭제 성공"));
     }
