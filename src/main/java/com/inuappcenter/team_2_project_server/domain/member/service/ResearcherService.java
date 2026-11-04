@@ -16,8 +16,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.Optional;
-
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
@@ -73,34 +71,30 @@ public class ResearcherService {
     }
 
     /**
-     * memberId로 연구자 id 조회. 연구자가 아니면 비어 있는 Optional (회원 탈퇴처럼 없어도 되는 경우용)
-     */
-    public Optional<Long> findIdByMemberId(Long memberId) {
-        return researcherRepository.findByMemberId(memberId)
-                .map(Researcher::getId);
-    }
-
-    /**
-     * 연구자 삭제 (회원 탈퇴용). 이 연구자의 커피챗 삭제, 리뷰 익명화를 먼저 해야 한다
+     * 본인 연구자 등록 취소 (API용). 회원은 남기고 연구자 레코드만 지운 뒤 유저 타입을 FINDER로 되돌린다. 연구자가 아니면 404
      */
     @Transactional
-    public void delete(Long researcherId) {
-        researcherRepository.deleteById(researcherId);
-    }
-
-    /**
-     * 본인 연구자 등록 해제. 회원은 남기고 연구자 레코드만 지운다.
-     * 회원 탈퇴와 같은 순서로 커피챗 삭제, 리뷰 익명화를 먼저 하고 연구자를 지운 뒤 유저 타입을 FINDER로 되돌린다
-     */
-    @Transactional
-    public void deleteByMemberId(Long memberId) {
+    public void unregister(Long memberId) {
         Researcher researcher = researcherRepository.findByMemberId(memberId)
                 .orElseThrow(() -> new MyException(ErrorCode.RESEARCHER_NOT_FOUND));
 
+        remove(researcher);
+        researcher.getMember().assignUserType(UserType.FINDER);
+    }
+
+    /**
+     * 연구자 레코드 정리 (회원 탈퇴용). 연구자가 아니면 아무 일도 하지 않는다
+     */
+    @Transactional
+    public void deleteIfPresent(Long memberId) {
+        researcherRepository.findByMemberId(memberId)
+                .ifPresent(this::remove);
+    }
+
+    // 커피챗 삭제 -> 리뷰 익명화(작성자 연결만 끊음) -> 연구자 삭제. 커피챗/리뷰가 연구자를 참조하므로(FK) 연구자를 마지막에 지운다
+    private void remove(Researcher researcher) {
         coffeeChatService.deleteByResearcherId(researcher.getId());
         labReviewService.anonymizeByResearcherId(researcher.getId());
         researcherRepository.delete(researcher);
-
-        researcher.getMember().assignUserType(UserType.FINDER);
     }
 }
