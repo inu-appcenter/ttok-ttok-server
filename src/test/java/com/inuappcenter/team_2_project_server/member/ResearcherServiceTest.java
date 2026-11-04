@@ -165,14 +165,14 @@ class ResearcherServiceTest {
     }
 
     @Test
-    void deleteByMemberId_cleans_up_then_deletes_and_resets_user_type() {
+    void unregister_cleans_up_then_deletes_and_resets_user_type() {
         Member member = mock(Member.class);
         Researcher researcher = mock(Researcher.class);
         given(researcher.getId()).willReturn(7L);
         given(researcher.getMember()).willReturn(member);
         given(researcherRepository.findByMemberId(1L)).willReturn(Optional.of(researcher));
 
-        researcherService.deleteByMemberId(1L);
+        researcherService.unregister(1L);
 
         // 회원 탈퇴와 같은 순서: 커피챗 삭제 -> 리뷰 익명화 -> 연구자 삭제 (FK 때문에 연구자를 마지막에 지운다)
         InOrder order = inOrder(coffeeChatService, labReviewService, researcherRepository);
@@ -183,13 +183,42 @@ class ResearcherServiceTest {
     }
 
     @Test
-    void deleteByMemberId_fails_when_not_researcher() {
+    void unregister_fails_when_not_researcher() {
         given(researcherRepository.findByMemberId(1L)).willReturn(Optional.empty());
 
-        assertThatThrownBy(() -> researcherService.deleteByMemberId(1L))
+        assertThatThrownBy(() -> researcherService.unregister(1L))
                 .isInstanceOf(MyException.class)
                 .extracting("errorCode")
                 .isEqualTo(ErrorCode.RESEARCHER_NOT_FOUND);
+
+        verify(coffeeChatService, never()).deleteByResearcherId(any());
+        verify(labReviewService, never()).anonymizeByResearcherId(any());
+        verify(researcherRepository, never()).delete(any());
+    }
+
+    @Test
+    void deleteIfPresent_cleans_up_without_changing_user_type() {
+        Member member = mock(Member.class);
+        Researcher researcher = mock(Researcher.class);
+        given(researcher.getId()).willReturn(7L);
+        given(researcher.getMember()).willReturn(member);
+        given(researcherRepository.findByMemberId(1L)).willReturn(Optional.of(researcher));
+
+        researcherService.deleteIfPresent(1L);
+
+        InOrder order = inOrder(coffeeChatService, labReviewService, researcherRepository);
+        order.verify(coffeeChatService).deleteByResearcherId(7L);
+        order.verify(labReviewService).anonymizeByResearcherId(7L);
+        order.verify(researcherRepository).delete(researcher);
+        // 회원 자체가 곧 삭제되므로 유저 타입은 바꾸지 않는다
+        verify(member, never()).assignUserType(any());
+    }
+
+    @Test
+    void deleteIfPresent_does_nothing_when_not_researcher() {
+        given(researcherRepository.findByMemberId(1L)).willReturn(Optional.empty());
+
+        researcherService.deleteIfPresent(1L);
 
         verify(coffeeChatService, never()).deleteByResearcherId(any());
         verify(labReviewService, never()).anonymizeByResearcherId(any());
