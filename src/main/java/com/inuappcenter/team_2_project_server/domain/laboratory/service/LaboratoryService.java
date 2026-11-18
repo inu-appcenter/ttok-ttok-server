@@ -14,7 +14,6 @@ import com.inuappcenter.team_2_project_server.domain.laboratory.repository.Labor
 import com.inuappcenter.team_2_project_server.domain.member.entity.Member;
 import com.inuappcenter.team_2_project_server.domain.member.entity.Professor;
 import com.inuappcenter.team_2_project_server.domain.member.service.ProfessorService;
-import com.inuappcenter.team_2_project_server.domain.member.service.ResearcherService;
 import com.inuappcenter.team_2_project_server.global.error.ex.ErrorCode;
 import com.inuappcenter.team_2_project_server.global.error.ex.MyException;
 import lombok.RequiredArgsConstructor;
@@ -34,9 +33,11 @@ import java.util.stream.Collectors;
 @Slf4j
 @Transactional
 public class LaboratoryService {
+    // 관리자 권한 (Member.role 값). 관리자는 모든 연구실을 수정/삭제할 수 있다
+    private static final String ADMIN_ROLE = "ROLE_ADMIN";
+
     private final LaboratoryRepository laboratoryRepository;
     private final ProfessorService professorService;
-    private final ResearcherService researcherService;
 
     /**
      * 연구실 수동 생성 메서드. 로그인한 계정과 연동된 교수 본인 명의로만 생성할 수 있다
@@ -152,13 +153,15 @@ public class LaboratoryService {
     }
 
     /**
-     * 이 연구실을 수정/삭제할 권한이 있는지 검증 — 소속 연구자이거나, 연동된 담당 교수 본인이면 통과
+     * 이 연구실을 수정/삭제할 권한이 있는지 검증 — 관리자이거나, 연동된 담당 교수 본인이면 통과.
+     * 소속 연구자는 온보딩에서 검증 없이 등록되므로 권한을 주지 않는다
      */
     private void validateAccess(Member member, Long laboratoryId) {
-        boolean isResearcher = researcherService.isAffiliated(member.getId(), laboratoryId);
-        boolean isOwnerProfessor = laboratoryRepository.existsByIdAndProfessor_MemberId(laboratoryId, member.getId());
+        if (ADMIN_ROLE.equals(member.getRole())) {
+            return;
+        }
 
-        if (!isResearcher && !isOwnerProfessor) {
+        if (!laboratoryRepository.existsByIdAndProfessor_MemberId(laboratoryId, member.getId())) {
             throw new MyException(ErrorCode.INVALID_LAB_ACCESS);
         }
     }
