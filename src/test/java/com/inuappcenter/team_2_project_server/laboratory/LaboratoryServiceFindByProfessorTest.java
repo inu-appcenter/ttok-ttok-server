@@ -8,7 +8,6 @@ import com.inuappcenter.team_2_project_server.domain.laboratory.repository.Labor
 import com.inuappcenter.team_2_project_server.domain.laboratory.service.LaboratoryService;
 import com.inuappcenter.team_2_project_server.domain.member.entity.Professor;
 import com.inuappcenter.team_2_project_server.domain.member.service.ProfessorService;
-import com.inuappcenter.team_2_project_server.domain.member.service.ResearcherService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -28,8 +27,7 @@ class LaboratoryServiceFindByProfessorTest {
         laboratoryRepository = mock(LaboratoryRepository.class);
         laboratoryService = new LaboratoryService(
                 laboratoryRepository,
-                mock(ProfessorService.class),
-                mock(ResearcherService.class)
+                mock(ProfessorService.class)
         );
     }
 
