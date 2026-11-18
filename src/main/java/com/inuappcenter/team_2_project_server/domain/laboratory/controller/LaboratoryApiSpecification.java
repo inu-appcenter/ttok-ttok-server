@@ -324,7 +324,7 @@ public interface LaboratoryApiSpecification {
             description = """
                     연구실 ID로 연구실 정보를 수정합니다.
                     요청에 포함된 값만 수정하며, 연구분야는 쉼표 문자열이 아니라 배열로 전달합니다.
-                    인증된 사용자가 해당 연구실 소속(연구자)인 경우에만 수정할 수 있습니다.
+                    해당 연구실의 담당 교수 본인(연동된 교수 계정) 또는 관리자만 수정할 수 있습니다. 소속 연구자는 수정할 수 없습니다.
                     """
     )
     @io.swagger.v3.oas.annotations.parameters.RequestBody(
@@ -394,7 +394,7 @@ public interface LaboratoryApiSpecification {
             ),
             @ApiResponse(
                     responseCode = "403",
-                    description = "해당 연구실 소속이 아님",
+                    description = "담당 교수 본인 또는 관리자가 아님",
                     content = @Content(
                             mediaType = "application/json",
                             schema = @Schema(implementation = ResponseDto.class),
@@ -433,7 +433,7 @@ public interface LaboratoryApiSpecification {
             summary = "연구실 삭제",
             description = """
                     연구실 ID로 연구실을 삭제합니다.
-                    인증된 사용자가 해당 연구실 소속(연구자)인 경우에만 삭제할 수 있습니다.
+                    해당 연구실의 담당 교수 본인(연동된 교수 계정) 또는 관리자만 삭제할 수 있습니다. 소속 연구자는 삭제할 수 없습니다.
                     """
     )
     @ApiResponses({
@@ -454,7 +454,7 @@ public interface LaboratoryApiSpecification {
             ),
             @ApiResponse(
                     responseCode = "403",
-                    description = "해당 연구실 소속이 아님",
+                    description = "담당 교수 본인 또는 관리자가 아님",
                     content = @Content(
                             mediaType = "application/json",
                             schema = @Schema(implementation = ResponseDto.class),
