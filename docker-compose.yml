@@ -12,6 +12,40 @@ services:
       # 같은 서버에 네이티브로 떠있는 Postgres에 접속하기 위함
       # (리눅스 Docker는 host.docker.internal을 기본 제공하지 않아 직접 등록)
       - "host.docker.internal:host-gateway"
+    volumes:
+      # 앱 로그 파일(logging.file.name)을 호스트에 남겨 alloy가 읽게 한다
+      - ./logs:/app/logs
+    networks:
+      - ttok-ttok-network
+
+  # 로그 저장소. 중앙 Grafana가 ttok-ttok-network로 조인해 조회한다 (호스트에 포트를 열지 않음)
+  loki:
+    image: grafana/loki:latest
+    container_name: ttok-ttok-loki
+    restart: unless-stopped
+    command: -config.file=/etc/loki/loki-config.yaml
+    volumes:
+      - ./infra/loki-config.yaml:/etc/loki/loki-config.yaml:ro
+      - loki-data:/loki
+    networks:
+      - ttok-ttok-network
+
+  # 로그 수집기. 앱 로그 파일을 읽어 loki로 보낸다
+  alloy:
+    image: grafana/alloy:latest
+    container_name: ttok-ttok-alloy
+    restart: unless-stopped
+    volumes:
+      - ./logs:/logs:ro
+      - ./infra/config.alloy:/etc/alloy/config.alloy:ro
+      # 어디까지 읽었는지 저장. 없으면 재시작할 때 같은 로그를 다시 보낸다
+      - alloy-data:/var/lib/alloy/data
+    command:
+      - run
+      - /etc/alloy/config.alloy
+      - --storage.path=/var/lib/alloy/data
+    depends_on:
+      - loki
     networks:
       - ttok-ttok-network
 
@@ -19,3 +53,7 @@ networks:
   ttok-ttok-network:
     external: true
     name: ttok-ttok-network
+
+volumes:
+  loki-data:
+  alloy-data:

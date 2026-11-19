@@ -1,0 +1,37 @@
+# 똑똑 서버 전용 Loki 설정 (단일 노드, 로컬 파일 저장)
+# 중앙 Grafana가 ttok-ttok-network로 조인해 http://ttok-ttok-loki:3100 으로 조회한다
+auth_enabled: false
+
+server:
+  http_listen_port: 3100
+
+common:
+  instance_addr: 127.0.0.1
+  path_prefix: /loki
+  storage:
+    filesystem:
+      chunks_directory: /loki/chunks
+      rules_directory: /loki/rules
+  replication_factor: 1
+  ring:
+    kvstore:
+      store: inmemory
+
+schema_config:
+  configs:
+    - from: 2026-01-01
+      store: tsdb
+      object_store: filesystem
+      schema: v13
+      index:
+        prefix: index_
+        period: 24h
+
+# 여러 서비스가 같이 쓰는 서버라 디스크가 계속 늘지 않도록 14일이 지난 로그는 지운다
+limits_config:
+  retention_period: 336h
+
+compactor:
+  working_directory: /loki/compactor
+  retention_enabled: true
+  delete_request_store: filesystem
