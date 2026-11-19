@@ -116,6 +116,6 @@ jobs:
           port: ${{ secrets.APPCENTER_SERVER_PORT }}
           script: |
             cd ${{ secrets.MOUNT_PATH }}
-            docker network inspect ttok-ttok-network >/dev/null 2>&1 || docker network create ttok-ttok-network
+            docker network inspect ttok-ttok-network >/dev/null 2>&1 || docker network create --subnet 172.16.92.0/24 ttok-ttok-network
             docker compose pull app
             docker compose up -d app --no-deps
