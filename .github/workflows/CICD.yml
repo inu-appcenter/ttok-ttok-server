@@ -104,7 +104,7 @@ jobs:
           username: ${{ secrets.APPCENTER_SERVER_USERNAME }}
           key: ${{ secrets.SERVER_KEY }}
           port: ${{ secrets.APPCENTER_SERVER_PORT }}
-          source: "docker-compose.yml"
+          source: "docker-compose.yml,infra/**"
           target: ${{ secrets.MOUNT_PATH }}
 
       - name: Deploy to server
@@ -117,5 +117,7 @@ jobs:
           script: |
             cd ${{ secrets.MOUNT_PATH }}
             docker network inspect ttok-ttok-network >/dev/null 2>&1 || docker network create --subnet 172.16.92.0/24 ttok-ttok-network
-            docker compose pull app
-            docker compose up -d app --no-deps
+            mkdir -p logs
+            docker compose pull app loki alloy
+            # down, --remove-orphans는 쓰지 않는다 (네트워크가 지워지면 중앙 Prometheus 수집이 끊김)
+            docker compose up -d --no-deps app loki alloy

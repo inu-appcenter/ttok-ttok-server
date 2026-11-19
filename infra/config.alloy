@@ -1,0 +1,20 @@
+// 앱이 남기는 로그 파일을 찾는다 (logging.file.name: /app/logs/ttok-ttok.log)
+// 지난 로그는 ttok-ttok.log.날짜.번호.gz로 압축되므로 *.log에는 현재 파일만 걸린다
+local.file_match "ttok_ttok_logs" {
+  path_targets = [{
+    __path__ = "/logs/*.log",
+    job      = "ttok-ttok",
+    env      = "prod",
+  }]
+}
+
+loki.source.file "ttok_ttok" {
+  targets    = local.file_match.ttok_ttok_logs.targets
+  forward_to = [loki.write.ttok_ttok.receiver]
+}
+
+loki.write "ttok_ttok" {
+  endpoint {
+    url = "http://ttok-ttok-loki:3100/loki/api/v1/push"
+  }
+}
