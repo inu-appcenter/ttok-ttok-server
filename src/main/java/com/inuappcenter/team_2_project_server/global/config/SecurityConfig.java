@@ -46,7 +46,7 @@ public class SecurityConfig {
         // api 인증
         httpSecurity
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/swagger-ui.html", "/swagger-ui/**", "/v3/api-docs/**", "/error").permitAll()
+                        .requestMatchers("/swagger-ui.html", "/swagger-ui/**", "/v3/api-docs/**", "/error", "/actuator/health", "/actuator/prometheus").permitAll()
 
                         // 최우선 허용
                         .requestMatchers("/api/member/login", "/api/member/reissue").permitAll()
