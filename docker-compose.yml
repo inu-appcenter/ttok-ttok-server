@@ -16,6 +16,6 @@ services:
       - ttok-ttok-network
 
 networks:
-  your-network:
+  ttok-ttok-network:
     external: true
     name: ttok-ttok-network
