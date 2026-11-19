@@ -12,3 +12,10 @@ services:
       # 같은 서버에 네이티브로 떠있는 Postgres에 접속하기 위함
       # (리눅스 Docker는 host.docker.internal을 기본 제공하지 않아 직접 등록)
       - "host.docker.internal:host-gateway"
+    networks:
+      - ttok-ttok-network
+
+networks:
+  your-network:
+    external: true
+    name: ttok-ttok-network
