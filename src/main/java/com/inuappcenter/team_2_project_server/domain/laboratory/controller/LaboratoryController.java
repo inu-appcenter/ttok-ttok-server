@@ -69,7 +69,7 @@ public class LaboratoryController implements LaboratoryApiSpecification {
     public ResponseEntity<ResponseDto<PageResponseDto<LaboratoryResponseDto>>> getAllLaboratory(
             @RequestParam(defaultValue = "0") int page
     ) {
-        Pageable pageable = PageRequest.of(validatePage(page), 20, Sort.by(Sort.Direction.ASC, "labName"));
+        Pageable pageable = PageRequest.of(validatePage(page), 18, Sort.by(Sort.Direction.ASC, "labName"));
         Page<LaboratoryResponseDto> result = laboratoryService.getAllLab(pageable);
 
         return ResponseEntity.ok(
